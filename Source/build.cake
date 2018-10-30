@@ -52,7 +52,7 @@ Task("Test")
 });
 
 Task("NugetPublish")
-    .IsDependentOn("Build")
+    .IsDependentOn("Test")
     .Does(() =>
 {    
     string source = "mbcpublic";    // Is defined in nuget.config!
