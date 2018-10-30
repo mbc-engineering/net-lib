@@ -24,6 +24,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		NuGet.Config = NuGet.Config
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mbc.Hdf5Utils", "Mbc.Hdf5Utils\Mbc.Hdf5Utils.csproj", "{9868501F-6BAA-47C9-8688-C9067245F412}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mbc.Hdf5Utils.Test", "Mbc.Hdf5Utils.Test\Mbc.Hdf5Utils.Test.csproj", "{133A1BF4-81F0-41AE-984A-07B484C43254}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +46,14 @@ Global
 		{C6601CC6-F073-498B-B270-EB91CE08F10A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C6601CC6-F073-498B-B270-EB91CE08F10A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C6601CC6-F073-498B-B270-EB91CE08F10A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9868501F-6BAA-47C9-8688-C9067245F412}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9868501F-6BAA-47C9-8688-C9067245F412}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9868501F-6BAA-47C9-8688-C9067245F412}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9868501F-6BAA-47C9-8688-C9067245F412}.Release|Any CPU.Build.0 = Release|Any CPU
+		{133A1BF4-81F0-41AE-984A-07B484C43254}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{133A1BF4-81F0-41AE-984A-07B484C43254}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{133A1BF4-81F0-41AE-984A-07B484C43254}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{133A1BF4-81F0-41AE-984A-07B484C43254}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
