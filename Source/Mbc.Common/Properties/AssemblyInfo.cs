@@ -1,5 +1,8 @@
-﻿using System.Reflection;
+﻿//-----------------------------------------------------------------------------
+// Copyright (c) 2018 by mbc engineering GmbH, CH-6015 Luzern
+// Licensed under the Apache License, Version 2.0
+//-----------------------------------------------------------------------------
+
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 [assembly: InternalsVisibleTo("Mbc.Common.Test")]

@@ -1,4 +1,9 @@
-﻿using System.Collections.Generic;
+﻿//-----------------------------------------------------------------------------
+// Copyright (c) 2018 by mbc engineering GmbH, CH-6015 Luzern
+// Licensed under the Apache License, Version 2.0
+//-----------------------------------------------------------------------------
+
+using System.Collections.Generic;
 
 namespace Mbc.Common
 {
@@ -11,6 +16,8 @@ namespace Mbc.Common
         /// Liefert eine <see cref="IEnumerable{T}"/> mit einen einzelnen
         /// Element zurück.
         /// </summary>
+        /// <typeparam name="T">zu benutzender typ</typeparam>
+        /// <param name="item">object zum zurückgeben</param>
         public static IEnumerable<T> Yield<T>(this T item)
         {
             yield return item;

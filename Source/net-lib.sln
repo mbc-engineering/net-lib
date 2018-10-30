@@ -11,13 +11,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mbc.Common.Test", "Mbc.Comm
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{387B3B40-3DC1-4D43-A162-C75C08F981DD}"
 	ProjectSection(SolutionItems) = preProject
-		Build\AssemblyInfo.Nsp.cs = Build\AssemblyInfo.Nsp.cs
-		Build\AssemblyInfo.TestProcedure.cs = Build\AssemblyInfo.TestProcedure.cs
+		Build\common.props = Build\common.props
 		Build\Mbc.CodeAnalysis.ruleset = Build\Mbc.CodeAnalysis.ruleset
 		Build\stylecop.json = Build\stylecop.json
-		Build\Target.Common.csproj = Build\Target.Common.csproj
-		Build\Target.Nsp.csproj = Build\Target.Nsp.csproj
-		Build\Target.TestProcedure.csproj = Build\Target.TestProcedure.csproj
 	EndProjectSection
 EndProject
 Global

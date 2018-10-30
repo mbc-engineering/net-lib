@@ -1,4 +1,9 @@
-﻿namespace Mbc.Common.Interface
+﻿//-----------------------------------------------------------------------------
+// Copyright (c) 2018 by mbc engineering GmbH, CH-6015 Luzern
+// Licensed under the Apache License, Version 2.0
+//-----------------------------------------------------------------------------
+
+namespace Mbc.Common.Interface
 {
     /// <summary>
     /// When implemented then shuld longruning or hardwork not be executed in the constructor, it should be in

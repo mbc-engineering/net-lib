@@ -1,43 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <Import Project="$(SolutionDir)Build\Target.Nsp.csproj" />
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(SolutionDir)Build\common.props" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C6601CC6-F073-498B-B270-EB91CE08F10A}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Mbc.Common.Test</RootNamespace>
-    <AssemblyName>Mbc.Common.Test</AssemblyName>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <!-- common nuget configuration see common.props-->
+    <TargetFramework>net471</TargetFramework>
+
+    <Product>Mbc.Common.Test</Product>
+
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Service\ServiceStartableManagerTest.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Mbc.Common.Interface\Mbc.Common.Interface.csproj">
-      <Project>{A080F14C-D6DA-4AC0-949D-3D0A7D56CB1F}</Project>
-      <Name>Mbc.Common.Interface</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Mbc.Common\Mbc.Common.csproj">
-      <Project>{66A3117B-3D5C-48F2-9C34-BC574E814605}</Project>
-      <Name>Mbc.Common</Name>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Autofac">
       <Version>4.8.1</Version>
@@ -64,7 +36,13 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <ProjectReference Include="..\Mbc.Common.Interface\Mbc.Common.Interface.csproj">
+      <Project>{a080f14c-d6da-4ac0-949d-3d0a7d56cb1f}</Project>
+      <Name>Mbc.Common.Interface</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Mbc.Common\Mbc.Common.csproj">
+      <Project>{66a3117b-3d5c-48f2-9c34-bc574e814605}</Project>
+      <Name>Mbc.Common</Name>
+    </ProjectReference>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
