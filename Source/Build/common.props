@@ -30,6 +30,7 @@
   
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <RepositoryUrl>http://gitlab.mbc-engineering.ch/mbc/net-lib.git</RepositoryUrl>
+    <PackageProjectUrl>http://gitlab.mbc-engineering.ch/mbc/net-lib</PackageProjectUrl>
     <IncludeSource>true</IncludeSource>
         
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>

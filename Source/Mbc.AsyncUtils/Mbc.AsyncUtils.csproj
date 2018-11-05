@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(SolutionDir)Build\common.props" />
+  <PropertyGroup>
+    <!-- common nuget configuration see common.props-->
+    <TargetFramework>net471</TargetFramework>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionSuffix></VersionSuffix>
+
+    <Product>Mbc.AsyncUtils</Product>
+
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Optional" Version="4.0.0" />
+  </ItemGroup>
+</Project>
