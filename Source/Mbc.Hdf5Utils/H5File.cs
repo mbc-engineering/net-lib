@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using HDF.PInvoke;
 
 namespace Mbc.Hdf5Utils
@@ -37,6 +38,18 @@ namespace Mbc.Hdf5Utils
         ~H5File()
         {
             Dispose(false);
+        }
+
+        public string GetName()
+        {
+            var len = H5F.get_name(_fileId, null, IntPtr.Zero).ToInt32();
+            H5Error.CheckH5Result(len);
+
+            var name = new StringBuilder(len + 1);
+            var ret = H5F.get_name(_fileId, name, new IntPtr(name.Capacity));
+            H5Error.CheckH5Result(ret.ToInt32());
+
+            return name.ToString();
         }
 
         internal long Id => _fileId;

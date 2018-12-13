@@ -19,8 +19,10 @@ namespace Mbc.Hdf5Utils.Test
             var file = Path.GetTempFileName();
             File.Delete(file);
             var h5file = new H5File(file, H5File.Flags.CreateOnly);
+            var name = h5file.GetName();
             h5file.Dispose();
 
+            name.Should().Be(file);
             File.Exists(file).Should().BeTrue();
         }
 
