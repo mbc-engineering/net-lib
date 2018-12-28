@@ -260,5 +260,6 @@ paket-files/
 __pycache__/
 *.pyc
 
-# Cake Build tools folder
-Tools
+# Cake Build tools folder and cake version pinned file
+/Source/tools/
+!/Source/tools/packages.config

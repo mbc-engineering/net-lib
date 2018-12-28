@@ -37,13 +37,15 @@ Task("Test")
     .IsDependentOn("Build")
     .Does(() =>
 {
-    // ToDo: https://cakebuild.net/api/Cake.Common.Tools.XUnit/XUnit2Aliases/
+    // Reference see: https://cakebuild.net/api/Cake.Common.Tools.XUnit/XUnit2Aliases/
     var testAssemblies = GetFiles($"./**/bin/{configuration}/**/*.test.dll");
     var xunitSettings = new XUnit2Settings {
         Parallelism = ParallelismOption.Assemblies,
         HtmlReport = true,
+        JUnitReport = true,
         NoAppDomain = true,
         OutputDirectory = $"./{testreportfolder}",   
+        
         // Workaround for missing junit support
         ArgumentCustomization = args => args.Append($"-junit \"{System.IO.Path.Combine(Environment.CurrentDirectory, testreportfolder, "XunitTestResultAsJunit.xml")}\""),
     };     
