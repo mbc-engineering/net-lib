@@ -2,13 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(SolutionDir)Build\common.props" />
   <PropertyGroup>
-    <!-- common nuget configuration see common.props-->
-    <TargetFramework>net471</TargetFramework>
-
+    <!-- common nuget configuration see common.props-->    
     <Product>Mbc.Hdf5Utils.Test</Product>
 
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-
+    
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FluentAssertions">

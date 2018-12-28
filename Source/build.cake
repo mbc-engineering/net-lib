@@ -6,7 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
-var testreportfolder = Argument("testreportfolder", "testresult");
+var testreportfolder = Argument("testreportfolder", "testresult").TrimEnd('/');
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,20 +36,23 @@ Task("Build")
 Task("Test")
     .IsDependentOn("Build")
     .Does(() =>
-{
-    // Reference see: https://cakebuild.net/api/Cake.Common.Tools.XUnit/XUnit2Aliases/
-    var testAssemblies = GetFiles($"./**/bin/{configuration}/**/*.test.dll");
+{    
+    var testAssemblies = GetFiles($"./**/bin/{configuration}/**/*.test.dll");    
     var xunitSettings = new XUnit2Settings {
         Parallelism = ParallelismOption.Assemblies,
+        UseX86 = false,
         HtmlReport = true,
         JUnitReport = true,
-        NoAppDomain = true,
-        OutputDirectory = $"./{testreportfolder}",   
-        
-        // Workaround for missing junit support
-        ArgumentCustomization = args => args.Append($"-junit \"{System.IO.Path.Combine(Environment.CurrentDirectory, testreportfolder, "XunitTestResultAsJunit.xml")}\""),
+        NoAppDomain = true,                        
+        OutputDirectory = $"./{testreportfolder}",
     };     
     
+    // Run Tests in x64 Process
+    XUnit2(testAssemblies, xunitSettings); 
+
+    // Run Tests in x86 Process
+    xunitSettings.UseX86 = true;
+    xunitSettings.OutputDirectory += "x86";
     XUnit2(testAssemblies, xunitSettings); 
 });
 
