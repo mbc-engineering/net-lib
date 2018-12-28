@@ -66,9 +66,16 @@ namespace Mbc.Hdf5Utils
                 return;
             _disposed = true;
 
-            var ret = H5F.close(_fileId);
-            if (disposing)
-                H5Error.CheckH5Result(ret);
+            // When file creation had failled is id=-1, so nothing to close there
+            if (_fileId >= 0)
+            {
+                var ret = H5F.close(_fileId);
+
+                if (disposing)
+                {
+                    H5Error.CheckH5Result(ret);
+                }
+            }
         }
 
         public void Flush()

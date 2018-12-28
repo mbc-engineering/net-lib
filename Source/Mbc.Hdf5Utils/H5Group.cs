@@ -1,6 +1,6 @@
-﻿using System;
+﻿using HDF.PInvoke;
+using System;
 using System.Collections.Generic;
-using HDF.PInvoke;
 
 namespace Mbc.Hdf5Utils
 {
@@ -33,9 +33,15 @@ namespace Mbc.Hdf5Utils
                 return;
             _disposed = true;
 
-            var ret = H5G.close(_groupId);
-            if (disposing)
-                H5Error.CheckH5Result(ret);
+            // does not work in x86 process, throws: System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
+            if (Environment.Is64BitProcess)
+            {
+                var ret = H5G.close(_groupId);
+                if (disposing)
+                {
+                    H5Error.CheckH5Result(ret);
+                }
+            }
         }
 
         public H5Group OpenGroup(string name)
@@ -66,7 +72,7 @@ namespace Mbc.Hdf5Utils
             // ./foo/bar -> current -> group(foo) -> group(bar)
 
             // Startpunkt festlegen
-            var curName = "";
+            var curName = string.Empty;
             var remainingName = name;
             if (remainingName.StartsWith("/"))
             {

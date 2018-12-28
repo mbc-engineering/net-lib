@@ -16,7 +16,7 @@ namespace Mbc.Hdf5Utils.Test
         [Fact]
         public void NewHdf5IsCreated()
         {
-            var file = Path.GetTempFileName();
+            var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             File.Delete(file);
             var h5file = new H5File(file, H5File.Flags.CreateOnly);
             var name = h5file.GetName();
@@ -29,20 +29,28 @@ namespace Mbc.Hdf5Utils.Test
         [Fact]
         public void OpenFailsIfExist()
         {
-            var file = Path.GetTempFileName();
+            var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            File.Create(file).Dispose();
 
+            try
+            {
 #pragma warning disable CA1806 // Do not ignore method results
-            Action act = () => new H5File(file, H5File.Flags.CreateOnly);
+                Action act = () => new H5File(file, H5File.Flags.CreateOnly);
 #pragma warning restore CA1806 // Do not ignore method results
 
-            act.Should().Throw<H5Error>()
-                .WithMessage("H5Fcreate: unable to create file -> File accessibilty - Unable to open file");
+                act.Should().Throw<H5Error>()
+                    .WithMessage("H5Fcreate: unable to create file -> File accessibilty - Unable to open file");
+            }
+            finally
+            {
+                File.Delete(file);
+            }
         }
 
         [Fact]
         public void OpenCurrentName()
         {
-            var file = Path.GetTempFileName();
+            var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             File.Delete(file);
             using (var h5file = new H5File(file, H5File.Flags.CreateOnly))
             {
@@ -56,7 +64,7 @@ namespace Mbc.Hdf5Utils.Test
         [Fact]
         public void OpenRootName()
         {
-            var file = Path.GetTempFileName();
+            var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             File.Delete(file);
             using (var h5file = new H5File(file, H5File.Flags.CreateOnly))
             {
@@ -70,7 +78,7 @@ namespace Mbc.Hdf5Utils.Test
         [Fact]
         public void OpenNotExistingName()
         {
-            var file = Path.GetTempFileName();
+            var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             File.Delete(file);
             using (var h5file = new H5File(file, H5File.Flags.CreateOnly))
             {
@@ -84,7 +92,7 @@ namespace Mbc.Hdf5Utils.Test
         [Fact]
         public void CreateNotExistingName()
         {
-            var file = Path.GetTempFileName();
+            var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             File.Delete(file);
             using (var h5file = new H5File(file, H5File.Flags.CreateOnly))
             {
@@ -98,7 +106,7 @@ namespace Mbc.Hdf5Utils.Test
         [Fact]
         public void CreateAndOpen()
         {
-            var file = Path.GetTempFileName();
+            var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             File.Delete(file);
             using (var h5file = new H5File(file, H5File.Flags.CreateOnly))
             {
@@ -117,7 +125,7 @@ namespace Mbc.Hdf5Utils.Test
         [Fact]
         public void ListAllGroupNames()
         {
-            var file = Path.GetTempFileName();
+            var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             File.Delete(file);
             using (var h5file = new H5File(file, H5File.Flags.CreateOnly))
             {

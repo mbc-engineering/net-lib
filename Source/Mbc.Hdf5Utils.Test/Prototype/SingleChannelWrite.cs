@@ -85,7 +85,7 @@ namespace Mbc.Hdf5Utils.Test.Prototype
 
         private string GetFile()
         {
-            var file = Path.GetTempFileName();
+            var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             File.Delete(file);
             return file;
         }

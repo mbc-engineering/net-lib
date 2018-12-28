@@ -14,7 +14,7 @@ namespace Mbc.Hdf5Utils.Test
 
         public H5AttributeTest(Hdf5LibFixture hdf5Lib)
         {
-            var file = Path.GetTempFileName();
+            var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             File.Delete(file);
             _h5File = new H5File(file, H5File.Flags.CreateOnly);
         }
