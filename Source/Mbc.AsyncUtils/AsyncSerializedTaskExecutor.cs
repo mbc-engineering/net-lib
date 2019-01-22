@@ -31,6 +31,8 @@ namespace Mbc.AsyncUtils
 
         public bool IsCalledFromExecutor => _executingExecutor == this;
 
+        public int ExecutionQueueLength => _executionQueue.Count;
+
         public void Execute(Action act)
         {
             _executionQueue.Add(act);
