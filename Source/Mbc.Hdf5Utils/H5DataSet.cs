@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using HDF.PInvoke;
+using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using HDF.PInvoke;
 
 namespace Mbc.Hdf5Utils
 {
@@ -217,15 +216,31 @@ namespace Mbc.Hdf5Utils
         /// Fügt mehrere Werte auf einmal hinzu. Das DataSet darf keine fixe Grösse
         /// besitzen und darf nur aus einer Dimension bestehen.
         /// </summary>
-        public void AppendAll<T>(IEnumerable<T> data)
+        /// <typeparam name="T">der Datentyp der zu schreibenden Werte</typeparam>
+        public void AppendAll<T>(T[] data)
         {
+            AppendAll(typeof(T), data, data.Length);
+        }
+
+        public void AppendAll(Type type, Array data, int count)
+        {
+            /*
+             * Implementierungshinweis: Die hinzufügenden Daten werden als Array mit primitiven
+             * Datentyp erwartet, da diese dann ohne Kopiervorgang direkt geschrieben werden
+             * können, in dem der HDF5-Lib ein unmanaged Pointer auf die Daten übergeben wird.
+             */
+
             if (!IsGrowing)
                 throw new InvalidOperationException("Append can only be used on growing data sets.");
 
-            T[] dataAsArray = data.ToArray();
+            if (data.Length == 0)
+                throw new ArgumentException("No data to append.", nameof(data));
 
-            var memoryType = H5Type.NativeToH5(typeof(T));
-            using (var memorySpace = H5DataSpace.CreateSimpleFixed(new[] { (ulong)dataAsArray.Length }))
+            if (data.Length < count)
+                throw new ArgumentOutOfRangeException(nameof(count));
+
+            var memoryType = H5Type.NativeToH5(type);
+            using (var memorySpace = H5DataSpace.CreateSimpleFixed(new[] { (ulong)count }))
             {
                 ulong[] start;
                 using (var space = GetSpace())
@@ -234,18 +249,26 @@ namespace Mbc.Hdf5Utils
                     if (start.Length != 1)
                         throw new InvalidOperationException("Append can only be used on one dimensional data sets.");
 
-                    var end = new[] { start[0] + (ulong)dataAsArray.Length };
+                    var end = new[] { start[0] + (ulong)count };
                     ExtendDimensions(end);
                 }
 
                 using (var space = GetSpace())
                 {
-                    space.Select(start, new[] { (ulong)dataAsArray.Length });
-                    Write(memorySpace, memoryType, space, dataAsArray);
+                    space.Select(start, new[] { (ulong)count });
+                    Write(memorySpace, memoryType, space, data);
                 }
             }
         }
 
+        /// <summary>
+        /// Schreibt die übergebenen Daten in den DataSet.
+        /// </summary>
+        /// <param name="memoryDataSpace">Der DataSpace der übergebenen Daten <paramref name="data"/>.</param>
+        /// <param name="memoryDataType">Der Typ der übergebenen Daten <paramref name="data"/>.</param>
+        /// <param name="fileDataSpace">Der DataSpace wo die Daten geschrieben werden sollen.</param>
+        /// <param name="data">Die zu schreibenden Daten. Es muss sich dabei entweder um
+        /// primitive Datentypen oder um 1-Dimensionale Arrays mit primitive Datentypen handeln.</param>
         private void Write(H5DataSpace memoryDataSpace, H5Type memoryDataType, H5DataSpace fileDataSpace, object data)
         {
             GCHandle gcHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
