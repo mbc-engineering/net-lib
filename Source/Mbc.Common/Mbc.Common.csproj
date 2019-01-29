@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.8.1" />
     <PackageReference Include="Ensure.That" Version="8.1.1" />
+    <PackageReference Include="Nito.AsyncEx" Version="4.0.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Mbc.Common.Interface\Mbc.Common.Interface.csproj" />

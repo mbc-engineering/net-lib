@@ -6,6 +6,7 @@
 using Autofac;
 using Autofac.Core;
 using Mbc.Common.Interface;
+using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,15 +41,19 @@ namespace Mbc.Common.Service
                 .Where(
                 c => typeof(IServiceStartable).IsAssignableFrom(c.Activator.LimitType) && !c.Metadata.ContainsKey(_serviceStartableStartActived));
 
-            Task.WhenAll(
-                servicesToStart.Select(
-                    r => Task.Factory.StartNew(() => Start(r)))).GetAwaiter().GetResult();
+            AsyncContext.Run(() =>
+            {
+                Task.WhenAll(
+                    servicesToStart.Select(
+                        r => Task.Factory.StartNew(() => Start(r))));
+            });
         }
 
         public void StopStartableComponents()
         {
-            Task.WhenAll(
-                _startedServices.Select(
+            AsyncContext.Run(() =>
+            {
+                Task.WhenAll(_startedServices.Select(
                     s => Task.Factory.StartNew(() => s.Stop())
                         .ContinueWith(t =>
                         {
@@ -59,7 +64,8 @@ namespace Mbc.Common.Service
                                     _startedServices.Remove(s);
                                 }
                             }
-                        }))).GetAwaiter().GetResult();
+                        })));
+            });
         }
 
         private void Start(IComponentRegistration registriaton)
