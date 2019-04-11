@@ -217,42 +217,19 @@ namespace Mbc.Hdf5Utils
             }
         }
 
-        public void Append(Type type, object[] data)
+        public void Append(Type type, Array data)
         {
             if (!IsGrowing)
                 throw new InvalidOperationException("Append can only be used on growing data sets.");
 
             var memoryType = H5Type.NativeToH5(type);
-            var dataSpaceDim = new ulong[2] { 1UL, (ulong)data.Length };
 
-            using (var memorySpace = H5DataSpace.CreateSimpleFixed(dataSpaceDim))
+            var dataSpaceDim = new ulong[data.Rank + 1];
+            dataSpaceDim[0] = 1UL;
+            for (var i = 0; i < data.Rank; i++)
             {
-                ulong[] start;
-                using (var space = GetSpace())
-                {
-                    start = space.CurrentDimensions;
-                    if (start.Length != 2)
-                        throw new InvalidOperationException("Append can only be used on two dimensional data sets.");
-
-                    var end = new[] { start[0] + 1, start[1] };
-                    ExtendDimensions(end);
-                }
-
-                using (var space = GetSpace())
-                {
-                    space.Select(start, new[] { 1UL, (ulong)data.Length });
-                    Write(memorySpace, memoryType, space, data);
-                }
+                dataSpaceDim[i + 1] = (ulong)data.GetLength(i);
             }
-        }
-
-        public void Append(Type type, object[,] data)
-        {
-            if (!IsGrowing)
-                throw new InvalidOperationException("Append can only be used on growing data sets.");
-
-            var memoryType = H5Type.NativeToH5(type);
-            var dataSpaceDim = new ulong[3] { 1UL, (ulong)data.GetLength(0), (ulong)data.GetLength(1) };
 
             using (var memorySpace = H5DataSpace.CreateSimpleFixed(dataSpaceDim))
             {
@@ -260,16 +237,23 @@ namespace Mbc.Hdf5Utils
                 using (var space = GetSpace())
                 {
                     start = space.CurrentDimensions;
-                    if (start.Length != 3)
-                        throw new InvalidOperationException("Append can only be used on three dimensional data sets.");
+                    if ((start.Length - 1) != data.Rank)
+                        throw new InvalidOperationException("Append can only be used if dimension is one less.");
 
-                    var end = new[] { start[0] + 1, start[1], start[2] };
+                    var end = (ulong[])start.Clone();
+                    end[0]++;
                     ExtendDimensions(end);
                 }
 
                 using (var space = GetSpace())
                 {
-                    space.Select(start, new[] { 1UL, (ulong)data.GetLength(0), (ulong)data.GetLength(1) });
+                    for (int i = 0; i < data.Rank; i++)
+                    {
+                        start[i + 1] = 0;
+                    }
+
+                    var count = (ulong[])dataSpaceDim.Clone();
+                    space.Select(start, count);
                     Write(memorySpace, memoryType, space, data);
                 }
             }
