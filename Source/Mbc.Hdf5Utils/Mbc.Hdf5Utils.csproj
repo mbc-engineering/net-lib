@@ -10,7 +10,7 @@
 
     <!-- Set compile option for using unsave keywords -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Version>0.3.2</Version>
+    <Version>0.3.3</Version>
 
   </PropertyGroup>
   <ItemGroup>

@@ -299,7 +299,7 @@ namespace Mbc.Hdf5Utils
                 using (var space = GetSpace())
                 {
                     start = space.CurrentDimensions;
-                    if (start.Length != dataSpaceDim.Rank)
+                    if (start.Length != data.Rank)
                         throw new InvalidOperationException("AppendAll can only be used if dimension matches.");
 
                     // 1. Dimension wird erweitert (growing)
