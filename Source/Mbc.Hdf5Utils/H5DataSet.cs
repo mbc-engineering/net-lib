@@ -187,10 +187,15 @@ namespace Mbc.Hdf5Utils
 
         public void Append<T>(T data)
         {
+            Append(typeof(T), data);
+        }
+
+        public void Append(Type type, object data)
+        {
             if (!IsGrowing)
                 throw new InvalidOperationException("Append can only be used on growing data sets.");
 
-            var memoryType = H5Type.NativeToH5(typeof(T));
+            var memoryType = H5Type.NativeToH5(type);
             using (var memorySpace = H5DataSpace.CreateSimpleFixed(new[] { 1UL }))
             {
                 ulong[] start;
@@ -207,6 +212,64 @@ namespace Mbc.Hdf5Utils
                 using (var space = GetSpace())
                 {
                     space.Select(start, new[] { 1UL });
+                    Write(memorySpace, memoryType, space, data);
+                }
+            }
+        }
+
+        public void Append(Type type, object[] data)
+        {
+            if (!IsGrowing)
+                throw new InvalidOperationException("Append can only be used on growing data sets.");
+
+            var memoryType = H5Type.NativeToH5(type);
+            var dataSpaceDim = new ulong[2] { 1UL, (ulong)data.Length };
+
+            using (var memorySpace = H5DataSpace.CreateSimpleFixed(dataSpaceDim))
+            {
+                ulong[] start;
+                using (var space = GetSpace())
+                {
+                    start = space.CurrentDimensions;
+                    if (start.Length != 2)
+                        throw new InvalidOperationException("Append can only be used on two dimensional data sets.");
+
+                    var end = new[] { start[0] + 1, start[1] };
+                    ExtendDimensions(end);
+                }
+
+                using (var space = GetSpace())
+                {
+                    space.Select(start, new[] { 1UL, (ulong)data.Length });
+                    Write(memorySpace, memoryType, space, data);
+                }
+            }
+        }
+
+        public void Append(Type type, object[,] data)
+        {
+            if (!IsGrowing)
+                throw new InvalidOperationException("Append can only be used on growing data sets.");
+
+            var memoryType = H5Type.NativeToH5(type);
+            var dataSpaceDim = new ulong[3] { 1UL, (ulong)data.GetLength(0), (ulong)data.GetLength(1) };
+
+            using (var memorySpace = H5DataSpace.CreateSimpleFixed(dataSpaceDim))
+            {
+                ulong[] start;
+                using (var space = GetSpace())
+                {
+                    start = space.CurrentDimensions;
+                    if (start.Length != 3)
+                        throw new InvalidOperationException("Append can only be used on three dimensional data sets.");
+
+                    var end = new[] { start[0] + 1, start[1], start[2] };
+                    ExtendDimensions(end);
+                }
+
+                using (var space = GetSpace())
+                {
+                    space.Select(start, new[] { 1UL, (ulong)data.GetLength(0), (ulong)data.GetLength(1) });
                     Write(memorySpace, memoryType, space, data);
                 }
             }
