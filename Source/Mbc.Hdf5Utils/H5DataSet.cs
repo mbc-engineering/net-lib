@@ -280,29 +280,43 @@ namespace Mbc.Hdf5Utils
             if (!IsGrowing)
                 throw new InvalidOperationException("Append can only be used on growing data sets.");
 
-            if (data.Length == 0)
+            if (data.GetLength(0) == 0)
                 throw new ArgumentException("No data to append.", nameof(data));
 
-            if (data.Length < count)
+            if (data.GetLength(0) < count)
                 throw new ArgumentOutOfRangeException(nameof(count));
 
             var memoryType = H5Type.NativeToH5(type);
-            using (var memorySpace = H5DataSpace.CreateSimpleFixed(new[] { (ulong)count }))
+
+            // 1. Dimension ist vorgegeben durch count
+            var dataSpaceDim = Enumerable.Range(0, data.Rank)
+                .Select(x => (ulong)(x == 0 ? count : data.GetLength(x)))
+                .ToArray();
+
+            using (var memorySpace = H5DataSpace.CreateSimpleFixed(dataSpaceDim))
             {
                 ulong[] start;
                 using (var space = GetSpace())
                 {
                     start = space.CurrentDimensions;
-                    if (start.Length != 1)
-                        throw new InvalidOperationException("Append can only be used on one dimensional data sets.");
+                    if (start.Length != dataSpaceDim.Rank)
+                        throw new InvalidOperationException("AppendAll can only be used if dimension matches.");
 
-                    var end = new[] { start[0] + (ulong)count };
+                    // 1. Dimension wird erweitert (growing)
+                    var end = (ulong[])start.Clone();
+                    end[0] += (ulong)count;
                     ExtendDimensions(end);
                 }
 
                 using (var space = GetSpace())
                 {
-                    space.Select(start, new[] { (ulong)count });
+                    // Start: alle ausser 1. Dimension auf 0 setzen
+                    for (int i = 1; i < data.Rank; i++)
+                    {
+                        start[i] = 0;
+                    }
+
+                    space.Select(start, dataSpaceDim);
                     Write(memorySpace, memoryType, space, data);
                 }
             }
