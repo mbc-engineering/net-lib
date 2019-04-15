@@ -21,7 +21,7 @@ namespace Mbc.Common.Service
     {
         private const string _serviceStartableStartActived = "__ServiceStartableActivated";
         private readonly IComponentContext _componentContext;
-        private List<IServiceStartable> _startedServices = new List<IServiceStartable>();
+        private readonly List<IServiceStartable> _startedServices = new List<IServiceStartable>();
 
         public ServiceStartableManager(IComponentContext componentContext)
         {
@@ -41,9 +41,9 @@ namespace Mbc.Common.Service
                 .Where(
                 c => typeof(IServiceStartable).IsAssignableFrom(c.Activator.LimitType) && !c.Metadata.ContainsKey(_serviceStartableStartActived));
 
-            AsyncContext.Run(() =>
+            AsyncContext.Run(async () =>
             {
-                Task.WhenAll(
+                await Task.WhenAll(
                     servicesToStart.Select(
                         r => Task.Factory.StartNew(() => Start(r))));
             });
@@ -51,9 +51,9 @@ namespace Mbc.Common.Service
 
         public void StopStartableComponents()
         {
-            AsyncContext.Run(() =>
+            AsyncContext.Run(async () =>
             {
-                Task.WhenAll(_startedServices.Select(
+                var taskToStop = _startedServices.Select(
                     s => Task.Factory.StartNew(() => s.Stop())
                         .ContinueWith(t =>
                         {
@@ -64,7 +64,8 @@ namespace Mbc.Common.Service
                                     _startedServices.Remove(s);
                                 }
                             }
-                        })));
+                        }));
+                await Task.WhenAll(taskToStop);
             });
         }
 
