@@ -3,7 +3,7 @@
   <Import Project="$(SolutionDir)Build\common.props" />
   <PropertyGroup>
     <!-- common nuget configuration see common.props-->
-    <VersionPrefix>0.2.5</VersionPrefix>
+    <VersionPrefix>0.3.0</VersionPrefix>
     <VersionSuffix></VersionSuffix>
     
     <Product>Mbc.Common</Product>
