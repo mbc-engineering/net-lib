@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="$(SolutionDir)Build\common.props" />
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Nativ\bin32\tcl86t.dll" PackagePath="build\Nativ\bin32" Visble="false" />
+    <Content Include="Nativ\bin64\tcl86t.dll" PackagePath="build\Nativ\bin64" Visble="false" />
+    <Content Include="Mbc.TclInterpreter.targets" PackagePath="build" />
+  </ItemGroup>
+</Project>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2046
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28922.388
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mbc.Common", "Mbc.Common\Mbc.Common.csproj", "{66A3117B-3D5C-48F2-9C34-BC574E814605}"
 EndProject
@@ -28,9 +28,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mbc.Hdf5Utils", "Mbc.Hdf5Ut
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mbc.Hdf5Utils.Test", "Mbc.Hdf5Utils.Test\Mbc.Hdf5Utils.Test.csproj", "{133A1BF4-81F0-41AE-984A-07B484C43254}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mbc.AsyncUtils", "Mbc.AsyncUtils\Mbc.AsyncUtils.csproj", "{53C94DCF-1437-4325-8A7F-6DAB1CD03985}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mbc.AsyncUtils", "Mbc.AsyncUtils\Mbc.AsyncUtils.csproj", "{53C94DCF-1437-4325-8A7F-6DAB1CD03985}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mbc.AsyncUtils.Test", "Mbc.AsyncUtils.Test\Mbc.AsyncUtils.Test.csproj", "{B259E018-D86B-4DF1-9C35-24CD6D80F034}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mbc.AsyncUtils.Test", "Mbc.AsyncUtils.Test\Mbc.AsyncUtils.Test.csproj", "{B259E018-D86B-4DF1-9C35-24CD6D80F034}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mbc.TclInterpreter", "Mbc.TclInterpreter\Mbc.TclInterpreter.csproj", "{4521BA21-20E4-42EF-B6B3-B48946527538}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mbc.TclInterpreter.Test", "Mbc.TclInterpreter.Test\Mbc.TclInterpreter.Test.csproj", "{B1886B50-8F89-4EF3-ADBD-987BC0810EB3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,6 +70,14 @@ Global
 		{B259E018-D86B-4DF1-9C35-24CD6D80F034}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B259E018-D86B-4DF1-9C35-24CD6D80F034}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B259E018-D86B-4DF1-9C35-24CD6D80F034}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4521BA21-20E4-42EF-B6B3-B48946527538}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4521BA21-20E4-42EF-B6B3-B48946527538}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4521BA21-20E4-42EF-B6B3-B48946527538}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4521BA21-20E4-42EF-B6B3-B48946527538}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1886B50-8F89-4EF3-ADBD-987BC0810EB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1886B50-8F89-4EF3-ADBD-987BC0810EB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1886B50-8F89-4EF3-ADBD-987BC0810EB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1886B50-8F89-4EF3-ADBD-987BC0810EB3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
