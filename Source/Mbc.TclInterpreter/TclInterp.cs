@@ -14,6 +14,7 @@ namespace Mbc.TclInterpreter
 
         private readonly IntPtr _tclip;
         private readonly Dictionary<string, TclCommandInfo> _commands = new Dictionary<string, TclCommandInfo>();
+        private readonly List<AbstractTclChannel> _channels = new List<AbstractTclChannel>();
 
         public TclInterp()
         {
@@ -74,6 +75,9 @@ namespace Mbc.TclInterpreter
 
         public void OpenChannel(string name, AbstractTclChannel channel, ChannelModeFlag flag)
         {
+            // Referenz hinzufügen, damit GC das Objekt nicht entfern
+            _channels.Add(channel);
+
             var channelType = new TclApi.TclChannelType()
             {
                 Version = 2,
