@@ -108,5 +108,19 @@ namespace Mbc.Hdf5Utils.Test
             // Assert
             names.Should().BeEquivalentTo("foo", "baz");
         }
+
+        [Fact]
+        public void ReWriteAttribute()
+        {
+            // Arrange
+            var attribute = new H5Attribute(_h5File);
+            attribute.Write("foo", 1);
+
+            // Act
+            attribute.Write("foo", 2);
+
+            // Assert
+            attribute.ReadInt("foo").Should().Be(2);
+        }
     }
 }

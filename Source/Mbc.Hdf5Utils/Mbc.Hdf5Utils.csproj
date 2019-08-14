@@ -3,14 +3,14 @@
   <Import Project="$(SolutionDir)Build\common.props" />
   <PropertyGroup>
     <!-- common nuget configuration see common.props-->
-    <VersionPrefix>0.4.1</VersionPrefix>
+    <VersionPrefix>0.4.2</VersionPrefix>
     <VersionSuffix></VersionSuffix>
 
     <Product>Mbc.Hdf5Utils</Product>
 
     <!-- Set compile option for using unsave keywords -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <Version>0.4.1</Version>
+    <Version>0.4.2</Version>
 
   </PropertyGroup>
   <ItemGroup>

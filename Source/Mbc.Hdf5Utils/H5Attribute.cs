@@ -96,19 +96,35 @@ namespace Mbc.Hdf5Utils
 
         private void WriteScalar(long h5NativeTypeId, string name, int size, Action<IntPtr> writePtr)
         {
-            using (H5Id dspace = new H5Id(H5S.create(H5S.class_t.SCALAR), H5S.close),
-                attribute = new H5Id(H5A.create(_locId, name, h5NativeTypeId, dspace), H5A.close))
+            using (H5Id dspace = new H5Id(H5S.create(H5S.class_t.SCALAR), H5S.close))
             {
-                var valuePtr = Marshal.AllocHGlobal(size);
+                H5Id attribute = null;
                 try
                 {
-                    writePtr(valuePtr);
-                    var ret = H5A.write(attribute, h5NativeTypeId, valuePtr);
-                    H5Error.CheckH5Result(ret);
+                    if (H5Error.CheckH5Result(H5A.exists(_locId, name)) > 0)
+                    {
+                        attribute = new H5Id(H5A.open(_locId, name), H5A.close);
+                    }
+                    else
+                    {
+                        attribute = new H5Id(H5A.create(_locId, name, h5NativeTypeId, dspace), H5A.close);
+                    }
+
+                    var valuePtr = Marshal.AllocHGlobal(size);
+                    try
+                    {
+                        writePtr(valuePtr);
+                        var ret = H5A.write(attribute, h5NativeTypeId, valuePtr);
+                        H5Error.CheckH5Result(ret);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(valuePtr);
+                    }
                 }
                 finally
                 {
-                    Marshal.FreeHGlobal(valuePtr);
+                    attribute?.Dispose();
                 }
             }
         }
