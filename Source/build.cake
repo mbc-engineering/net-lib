@@ -51,9 +51,9 @@ Task("Test")
     XUnit2(testAssemblies, xunitSettings); 
 
     // Run Tests in x86 Process
-    xunitSettings.UseX86 = true;
-    xunitSettings.OutputDirectory += "x86";
-    XUnit2(testAssemblies, xunitSettings); 
+    //xunitSettings.UseX86 = true;
+    //xunitSettings.OutputDirectory += "x86";
+    //XUnit2(testAssemblies, xunitSettings); 
 });
 
 Task("NugetPublish")
