@@ -1,23 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Mbc.Hdf5Utils
 {
-    internal class H5Id : IDisposable
+    public class H5Id : IDisposable
     {
-        public readonly long _id;
-        public readonly Func<long, int> _closer;
+        private readonly Func<long, int> _closer;
         private bool _disposed;
 
         public H5Id(long id, Func<long, int> closer)
         {
-            _id = id;
+            Id = id;
             _closer = closer;
 
-            if (_id < 0)
+            if (Id < 0)
                 throw H5Error.GetExceptionFromHdf5Stack();
         }
 
@@ -26,7 +21,7 @@ namespace Mbc.Hdf5Utils
             Dispose(false);
         }
 
-        public long Id => _id;
+        public long Id { get; }
 
         public static implicit operator long(H5Id h5Id)
         {
@@ -45,7 +40,7 @@ namespace Mbc.Hdf5Utils
                 return;
             _disposed = true;
 
-            var ret = _closer(_id);
+            var ret = _closer(Id);
             if (disposing)
                 H5Error.CheckH5Result(ret);
         }
