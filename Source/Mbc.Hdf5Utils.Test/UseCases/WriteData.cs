@@ -46,6 +46,29 @@ namespace Mbc.Hdf5Utils.Test.UseCases
         }
 
         [Fact]
+        public void WriteOneDimensionalDataFullWithExplicitType()
+        {
+            var file = GetFile();
+            using (var h5File = new H5File(file, H5File.Flags.CreateOnly))
+            {
+                var dataSetBuilder = new H5DataSet.Builder()
+                    .WithName("/data/set")
+                    .WithType<double>()
+                    .WithDimension(10);
+
+                using (var dataSet = dataSetBuilder.Create(h5File))
+                {
+                    dataSet.Attributes().Write("Timestamp", DateTime.UtcNow.ToString("o"));
+
+                    Array data = new double[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+                    dataSet.Write(typeof(double), data);
+                }
+            }
+
+            _testOutputHelper.WriteLine(file);
+        }
+
+        [Fact]
         public void WriteOneDimensionalDataIncrementelFixed()
         {
             var file = GetFile();

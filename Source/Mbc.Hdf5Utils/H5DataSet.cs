@@ -215,7 +215,17 @@ namespace Mbc.Hdf5Utils
 
         public void Write<T>(T[,] data, H5DataSpace fileDataSpace = null)
         {
-            var memoryType = H5Type.NativeToH5(typeof(T));
+            Write(typeof(T), data, fileDataSpace);
+        }
+
+        public void Write<T>(T[] data, H5DataSpace fileDataSpace = null)
+        {
+            Write(typeof(T), data, fileDataSpace);
+        }
+
+        public void Write(Type type, Array data, H5DataSpace fileDataSpace = null)
+        {
+            var memoryType = H5Type.NativeToH5(type);
             using (var memorySpace = H5DataSpace.CreateSimpleFixed(new[] { (ulong)data.GetLength(0), (ulong)data.GetLength(1) }))
             {
                 if (IsGrowing && fileDataSpace == null)
@@ -246,34 +256,6 @@ namespace Mbc.Hdf5Utils
                     using (var space = GetSpace())
                     {
                         space.Select(start, new[] { (ulong)data.GetLength(0), (ulong)data.GetLength(1) });
-                        Write(memorySpace, memoryType, space, data);
-                    }
-                }
-                else
-                {
-                    Write(memorySpace, memoryType, fileDataSpace, data);
-                }
-            }
-        }
-
-        public void Write<T>(T[] data, H5DataSpace fileDataSpace = null)
-        {
-            var memoryType = H5Type.NativeToH5(typeof(T));
-            using (var memorySpace = H5DataSpace.CreateSimpleFixed(new[] { (ulong)data.Length }))
-            {
-                if (IsGrowing && fileDataSpace == null)
-                {
-                    ulong[] start;
-                    using (var space = GetSpace())
-                    {
-                        start = space.CurrentDimensions;
-                        var end = new[] { start[0] + (ulong)data.Length };
-                        ExtendDimensions(end);
-                    }
-
-                    using (var space = GetSpace())
-                    {
-                        space.Select(start, new[] { (ulong)data.Length });
                         Write(memorySpace, memoryType, space, data);
                     }
                 }
