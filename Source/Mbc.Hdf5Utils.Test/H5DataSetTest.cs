@@ -11,7 +11,7 @@ namespace Mbc.Hdf5Utils.Test
         }
 
         [Fact]
-        public void SomethingShouldBeDone()
+        public void OpenDataSet()
         {
             // Arrange
             var file = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());

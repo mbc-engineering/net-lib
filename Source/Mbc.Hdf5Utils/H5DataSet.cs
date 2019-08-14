@@ -226,7 +226,9 @@ namespace Mbc.Hdf5Utils
         public void Write(Type type, Array data, H5DataSpace fileDataSpace = null)
         {
             var memoryType = H5Type.NativeToH5(type);
-            using (var memorySpace = H5DataSpace.CreateSimpleFixed(new[] { (ulong)data.GetLength(0), (ulong)data.GetLength(1) }))
+            var rank = data.Rank;
+
+            using (var memorySpace = H5DataSpace.CreateSimpleFixed(Enumerable.Range(0, rank).Select(i => (ulong)data.GetLength(i)).ToArray()))
             {
                 if (IsGrowing && fileDataSpace == null)
                 {
@@ -255,7 +257,7 @@ namespace Mbc.Hdf5Utils
 
                     using (var space = GetSpace())
                     {
-                        space.Select(start, new[] { (ulong)data.GetLength(0), (ulong)data.GetLength(1) });
+                        space.Select(start, Enumerable.Range(0, rank).Select(i => (ulong)data.GetLength(i)).ToArray());
                         Write(memorySpace, memoryType, space, data);
                     }
                 }
