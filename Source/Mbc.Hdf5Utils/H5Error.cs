@@ -28,10 +28,20 @@ namespace Mbc.Hdf5Utils
             return new ErrorWalker().Error;
         }
 
-        public static void CheckH5Result(int result)
+        public static int CheckH5Result(int result)
         {
             if (result < 0)
                 throw GetExceptionFromHdf5Stack();
+
+            return result;
+        }
+
+        public static long CheckH5Result(long result)
+        {
+            if (result < 0)
+                throw GetExceptionFromHdf5Stack();
+
+            return result;
         }
 
         private class ErrorWalker

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using HDF.PInvoke;
 
 namespace Mbc.Hdf5Utils
@@ -38,6 +39,11 @@ namespace Mbc.Hdf5Utils
             if (!_nativeTypes.ContainsKey(type))
                 throw new ArgumentException($"Invalid type: {type}.", nameof(type));
             return _nativeTypes[type];
+        }
+
+        public static Type H5ToNative(long typeId)
+        {
+            return _nativeTypes.First(x => H5Error.CheckH5Result(H5T.equal(x.Value.Id, typeId)) > 0).Key;
         }
 
         private H5Type(long typeId)

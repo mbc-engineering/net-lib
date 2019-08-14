@@ -18,6 +18,40 @@ namespace Mbc.Hdf5Utils
             public uint? DeflateLevel { get; set; }
         }
 
+        /// <summary>
+        /// Öffnet ein bestehendes Dataset mit dem angegeben Namen.
+        /// </summary>
+        public static H5DataSet Open(H5File file, string name)
+        {
+            return Open(file.Id, name);
+        }
+
+        /// <summary>
+        /// Öffnet ein bestehendes Dataset mit dem angegeben Namen.
+        /// </summary>
+        public static H5DataSet Open(H5Group group, string name)
+        {
+            return Open(group.Id, name);
+        }
+
+        private static H5DataSet Open(long locId, string name)
+        {
+            var dataSetId = H5Error.CheckH5Result(H5D.open(locId, name));
+
+            bool[] growing;
+            using (var dataSpaceId = new H5Id(H5D.get_space(dataSetId), id => H5S.close(id)))
+            {
+                var rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
+
+                var maxDims = new ulong[rank];
+                H5Error.CheckH5Result(H5S.get_simple_extent_dims(dataSpaceId, null, maxDims));
+
+                growing = maxDims.Select(x => x == H5S.UNLIMITED).ToArray();
+            }
+
+            return new H5DataSet(dataSetId, growing);
+        }
+
         public static H5DataSet Create(H5File file, string name, H5Type type, H5DataSpace space, CreateOptions options = null)
         {
             return Create(file.Id, name, type.Id, space.Id, options);
@@ -98,6 +132,71 @@ namespace Mbc.Hdf5Utils
         internal long Id => _dataSetId;
 
         public bool IsGrowing => _growing.Contains(true);
+
+        /// <summary>
+        /// Liefert den Typ des Datasets zurück (sofern möglich -> ComboundType, CustomTypes).
+        /// </summary>
+        public Type ValueType
+        {
+            get
+            {
+                using (var typeId = new H5Id(H5D.get_type(_dataSetId), id => H5T.close(id)))
+                {
+                    return H5Type.H5ToNative(typeId);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Liefert die Dimension des Datasets zurück.
+        /// </summary>
+        public ulong[] GetDimensions()
+        {
+            using (var dataSpaceId = new H5Id(H5D.get_space(_dataSetId), id => H5S.close(id)))
+            {
+                var rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
+
+                var dims = new ulong[rank];
+                H5Error.CheckH5Result(H5S.get_simple_extent_dims(dataSpaceId, dims, null));
+
+                return dims;
+            }
+        }
+
+        /// <summary>
+        /// Liefert die max. Dimension des Datasets zurück.
+        /// </summary>
+        public ulong[] GetMaxDimensions()
+        {
+            using (var dataSpaceId = new H5Id(H5D.get_space(_dataSetId), id => H5S.close(id)))
+            {
+                var rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
+
+                var maxDims = new ulong[rank];
+                H5Error.CheckH5Result(H5S.get_simple_extent_dims(dataSpaceId, null, maxDims));
+
+                return maxDims;
+            }
+        }
+
+        /// <summary>
+        /// Liefert die konfigurierte Chunk-Size zurück.
+        /// </summary>
+        public ulong[] GetChunkSize()
+        {
+            using (var propListId = new H5Id(H5D.get_create_plist(_dataSetId), id => H5P.close(id)))
+            {
+                int rank;
+                using (var dataSpaceId = new H5Id(H5D.get_space(_dataSetId), id => H5S.close(id)))
+                {
+                    rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
+                }
+
+                var dims = new ulong[rank];
+                H5Error.CheckH5Result(H5P.get_chunk(propListId, rank, dims));
+                return dims;
+            }
+        }
 
         public void ExtendDimensions(ulong[] newDimensions)
         {
