@@ -39,7 +39,7 @@ Task("Test")
 {    
     var testAssemblies = GetFiles($"./**/bin/{configuration}/**/*.test.dll");    
     var xunitSettings = new XUnit2Settings {
-        Parallelism = ParallelismOption.Assemblies,
+        Parallelism = ParallelismOption.None,
         UseX86 = false,
         HtmlReport = true,
         JUnitReport = true,
