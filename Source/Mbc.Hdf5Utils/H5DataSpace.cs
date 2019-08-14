@@ -11,24 +11,24 @@ namespace Mbc.Hdf5Utils
         private readonly long _dataSpaceId;
         private bool _disposed;
 
-        public static H5DataSpace CreateSimpleFixed(ulong[] current)
+        public static H5DataSpace CreateSimpleFixed(ulong[] dimension)
         {
-            return CreateSimple(current, current);
+            return CreateSimple(dimension, dimension);
         }
 
-        public static H5DataSpace CreateSimple(ulong[] current, ulong[] max = null)
+        public static H5DataSpace CreateSimple(ulong[] dimension, ulong[] maxDimension = null)
         {
-            if (max != null && current.Length != max.Length)
-                throw new ArgumentException("max must have the same length as current", nameof(max));
+            if (maxDimension != null && dimension.Length != maxDimension.Length)
+                throw new ArgumentException("max must have the same length as current", nameof(maxDimension));
 
-            var rank = current.Length;
+            var rank = dimension.Length;
 
-            if (max == null)
+            if (maxDimension == null)
             {
-                max = Enumerable.Repeat(UNLIMITED, rank).ToArray();
+                maxDimension = Enumerable.Repeat(UNLIMITED, rank).ToArray();
             }
 
-            var dataSpaceId = H5S.create_simple(rank, current, max);
+            var dataSpaceId = H5S.create_simple(rank, dimension, maxDimension);
             if (dataSpaceId < 0)
                 throw H5Error.GetExceptionFromHdf5Stack();
 

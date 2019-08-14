@@ -223,15 +223,20 @@ namespace Mbc.Hdf5Utils
             Write(typeof(T), data, fileDataSpace);
         }
 
-        public void Write(Type type, Array data, H5DataSpace fileDataSpace = null)
+        public void Write(Type type, Array data, H5DataSpace targetDataSpace = null, H5DataSpace sourceDataSpace = null)
         {
             var memoryType = H5Type.NativeToH5(type);
-            var rank = data.Rank;
+            var memoryRank = data.Rank;
+            var memoryDimension = Enumerable.Range(0, memoryRank).Select(i => (ulong)data.GetLength(i)).ToArray();
 
-            using (var memorySpace = H5DataSpace.CreateSimpleFixed(Enumerable.Range(0, rank).Select(i => (ulong)data.GetLength(i)).ToArray()))
+            var memorySpace = sourceDataSpace ?? H5DataSpace.CreateSimpleFixed(memoryDimension);
+            try
             {
-                if (IsGrowing && fileDataSpace == null)
+                if (IsGrowing && targetDataSpace == null)
                 {
+                    if (sourceDataSpace != null)
+                        throw new NotImplementedException("Currently sourceDataSpace is not supported with growing data sets.");
+
                     ulong[] start;
                     using (var space = GetSpace())
                     {
@@ -257,13 +262,21 @@ namespace Mbc.Hdf5Utils
 
                     using (var space = GetSpace())
                     {
-                        space.Select(start, Enumerable.Range(0, rank).Select(i => (ulong)data.GetLength(i)).ToArray());
+                        space.Select(start, memoryDimension);
                         Write(memorySpace, memoryType, space, data);
                     }
                 }
                 else
                 {
-                    Write(memorySpace, memoryType, fileDataSpace, data);
+                    Write(memorySpace, memoryType, targetDataSpace, data);
+                }
+            }
+            finally
+            {
+                // nur Dispose, wenn der DataSpace auch erzeugt wurde
+                if (memorySpace != sourceDataSpace)
+                {
+                    memorySpace.Dispose();
                 }
             }
         }
