@@ -92,6 +92,14 @@ namespace Mbc.Hdf5Utils
             }
         }
 
+        public long ElementCount
+        {
+            get
+            {
+                return H5Error.CheckH5Result(H5S.get_simple_extent_npoints(_dataSpaceId));
+            }
+        }
+
         public HyperslabSelector Select(ulong[] start, ulong[] count, ulong[] stride = null, ulong[] block = null)
         {
             return new HyperslabSelector(_dataSpaceId, start, stride, count, block);

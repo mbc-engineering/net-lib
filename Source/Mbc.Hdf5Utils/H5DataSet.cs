@@ -223,18 +223,23 @@ namespace Mbc.Hdf5Utils
             Write(typeof(T), data, fileDataSpace);
         }
 
-        public void Write(Type type, Array data, H5DataSpace targetDataSpace = null, H5DataSpace sourceDataSpace = null)
+        public void Write(Array data, H5DataSpace fileDataSpace = null, H5DataSpace memoryDataSpace = null)
+        {
+            Write(data.GetType().GetElementType(), data, fileDataSpace, memoryDataSpace);
+        }
+
+        public void Write(Type type, Array data, H5DataSpace fileDataSpace = null, H5DataSpace memoryDataSpace = null)
         {
             var memoryType = H5Type.NativeToH5(type);
             var memoryRank = data.Rank;
             var memoryDimension = Enumerable.Range(0, memoryRank).Select(i => (ulong)data.GetLength(i)).ToArray();
 
-            var memorySpace = sourceDataSpace ?? H5DataSpace.CreateSimpleFixed(memoryDimension);
+            var memorySpace = memoryDataSpace ?? H5DataSpace.CreateSimpleFixed(memoryDimension);
             try
             {
-                if (IsGrowing && targetDataSpace == null)
+                if (IsGrowing && fileDataSpace == null)
                 {
-                    if (sourceDataSpace != null)
+                    if (memoryDataSpace != null)
                         throw new NotImplementedException("Currently sourceDataSpace is not supported with growing data sets.");
 
                     ulong[] start;
@@ -268,13 +273,41 @@ namespace Mbc.Hdf5Utils
                 }
                 else
                 {
-                    Write(memorySpace, memoryType, targetDataSpace, data);
+                    Write(memorySpace, memoryType, fileDataSpace, data);
                 }
             }
             finally
             {
                 // nur Dispose, wenn der DataSpace auch erzeugt wurde
-                if (memorySpace != sourceDataSpace)
+                if (memorySpace != memoryDataSpace)
+                {
+                    memorySpace.Dispose();
+                }
+            }
+        }
+
+        public void Read(Array data, H5DataSpace fileDataSpace = null, H5DataSpace memoryDataSpace = null)
+        {
+            Read(data.GetType().GetElementType(), data, fileDataSpace, memoryDataSpace);
+        }
+
+        public void Read(Type type, Array data, H5DataSpace fileDataSpace = null, H5DataSpace memoryDataSpace = null)
+        {
+            var memoryType = H5Type.NativeToH5(type);
+
+            var memorySpace = memoryDataSpace ?? H5DataSpace.CreateSimpleFixed(Enumerable.Range(0, data.Rank).Select(i => (ulong)data.GetLength(i)).ToArray());
+            try
+            {
+                // checks
+                if (data.Rank != memorySpace.Rank)
+                    throw new ArgumentException($"Rank of memoryDataSpace ({memorySpace.Rank}) does not match data ({data.Rank})");
+
+                Read(memorySpace, memoryType, fileDataSpace, data);
+            }
+            finally
+            {
+                // nur Dispose, wenn der DataSpace auch erzeugt wurde
+                if (memorySpace != memoryDataSpace)
                 {
                     memorySpace.Dispose();
                 }
@@ -433,6 +466,22 @@ namespace Mbc.Hdf5Utils
             {
                 var ret = H5D.write(_dataSetId, memoryDataType.Id, memoryDataSpace.Id, fileDataSpace != null ? fileDataSpace.Id : H5S.ALL, H5P.DEFAULT, gcHandle.AddrOfPinnedObject());
                 H5Error.CheckH5Result(ret);
+            }
+            finally
+            {
+                gcHandle.Free();
+            }
+        }
+
+        /// <summary>
+        /// Liest Daten vom DataSet in die übergebene Struktur.
+        /// </summary>
+        private void Read(H5DataSpace memoryDataSpace, H5Type memoryDataType, H5DataSpace fileDataSpace, object data)
+        {
+            GCHandle gcHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
+            try
+            {
+                H5Error.CheckH5Result(H5D.read(_dataSetId, memoryDataType.Id, memoryDataSpace.Id, fileDataSpace != null ? fileDataSpace.Id : H5S.ALL, H5P.DEFAULT, gcHandle.AddrOfPinnedObject()));
             }
             finally
             {
