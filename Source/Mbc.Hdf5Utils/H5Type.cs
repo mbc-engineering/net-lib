@@ -12,11 +12,11 @@ namespace Mbc.Hdf5Utils
         public static readonly H5Type SByteType = new H5Type(H5T.NATIVE_SCHAR);
         public static readonly H5Type ShortType = new H5Type(H5T.NATIVE_SHORT);
         public static readonly H5Type IntType = new H5Type(H5T.NATIVE_INT);
-        public static readonly H5Type LongType = new H5Type(H5T.NATIVE_LONG);
+        public static readonly H5Type LongType = new H5Type(H5T.NATIVE_INT64);
         public static readonly H5Type ByteType = new H5Type(H5T.NATIVE_CHAR);
         public static readonly H5Type UShortType = new H5Type(H5T.NATIVE_USHORT);
         public static readonly H5Type UIntType = new H5Type(H5T.NATIVE_UINT);
-        public static readonly H5Type ULongType = new H5Type(H5T.NATIVE_ULONG);
+        public static readonly H5Type ULongType = new H5Type(H5T.NATIVE_UINT64);
 
         private static Dictionary<Type, H5Type> _nativeTypes = new Dictionary<Type, H5Type>
         {
