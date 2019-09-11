@@ -15,8 +15,11 @@ namespace Mbc.Hdf5Utils
         public H5LinkIterator(long groupId)
         {
             ulong idx = 0;
-            var ret = H5L.iterate(groupId, H5.index_t.NAME, H5.iter_order_t.NATIVE, ref idx, IterateCallback, IntPtr.Zero);
-            H5Error.CheckH5Result(ret);
+            lock (H5GlobalLock.Sync)
+            {
+                var ret = H5L.iterate(groupId, H5.index_t.NAME, H5.iter_order_t.NATIVE, ref idx, IterateCallback, IntPtr.Zero);
+                H5Error.CheckH5Result(ret);
+            }
         }
 
         private int IterateCallback(long group, IntPtr name, ref H5L.info_t info, IntPtr op_data)

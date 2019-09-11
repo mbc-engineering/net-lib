@@ -7,7 +7,6 @@ namespace Mbc.Hdf5Utils
 {
     public class H5DataSet : IDisposable
     {
-        private readonly long _dataSetId;
         private readonly bool[] _growing;
         private bool _disposed;
 
@@ -36,20 +35,23 @@ namespace Mbc.Hdf5Utils
 
         private static H5DataSet Open(long locId, string name)
         {
-            var dataSetId = H5Error.CheckH5Result(H5D.open(locId, name));
-
-            bool[] growing;
-            using (var dataSpaceId = new H5Id(H5D.get_space(dataSetId), id => H5S.close(id)))
+            lock (H5GlobalLock.Sync)
             {
-                var rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
+                var dataSetId = H5Error.CheckH5Result(H5D.open(locId, name));
 
-                var maxDims = new ulong[rank];
-                H5Error.CheckH5Result(H5S.get_simple_extent_dims(dataSpaceId, null, maxDims));
+                bool[] growing;
+                using (var dataSpaceId = new H5Id(H5D.get_space(dataSetId), id => H5S.close(id)))
+                {
+                    var rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
 
-                growing = maxDims.Select(x => x == H5S.UNLIMITED).ToArray();
+                    var maxDims = new ulong[rank];
+                    H5Error.CheckH5Result(H5S.get_simple_extent_dims(dataSpaceId, null, maxDims));
+
+                    growing = maxDims.Select(x => x == H5S.UNLIMITED).ToArray();
+                }
+
+                return new H5DataSet(dataSetId, growing);
             }
-
-            return new H5DataSet(dataSetId, growing);
         }
 
         public static H5DataSet Create(H5File file, string name, H5Type type, H5DataSpace space, CreateOptions options = null)
@@ -64,45 +66,48 @@ namespace Mbc.Hdf5Utils
 
         private static H5DataSet Create(long locId, string name, long typeId, long spaceId, CreateOptions options)
         {
-            var rank = H5S.get_simple_extent_ndims(spaceId);
-            if (rank < 0)
-                throw H5Error.GetExceptionFromHdf5Stack();
-
-            var maxDimensions = new ulong[rank];
-            var ret = H5S.get_simple_extent_dims(spaceId, null, maxDimensions);
-            if (ret < 0)
-                throw H5Error.GetExceptionFromHdf5Stack();
-
-            var growing = maxDimensions.Select(x => x == H5S.UNLIMITED).ToArray();
-
-            if (growing.Contains(true) && options?.Chunks == null)
-                throw new ArgumentException("Growing data sets require chunking.", nameof(options));
-
-            using (var propList = new H5Id(H5P.create(H5P.DATASET_CREATE), (id) => H5P.close(id)))
+            lock (H5GlobalLock.Sync)
             {
-                if (options?.Chunks != null)
-                {
-                    ret = H5P.set_chunk(propList.Id, options.Chunks.Length, options.Chunks);
-                    H5Error.CheckH5Result(ret);
-                }
-
-                if (options != null && options.DeflateLevel.HasValue)
-                {
-                    ret = H5P.set_deflate(propList.Id, options.DeflateLevel.Value);
-                    H5Error.CheckH5Result(ret);
-                }
-
-                var dataSetId = H5D.create(locId, name, typeId, spaceId, dcpl_id: propList.Id);
-                if (dataSetId < 0)
+                var rank = H5S.get_simple_extent_ndims(spaceId);
+                if (rank < 0)
                     throw H5Error.GetExceptionFromHdf5Stack();
 
-                return new H5DataSet(dataSetId, growing);
+                var maxDimensions = new ulong[rank];
+                var ret = H5S.get_simple_extent_dims(spaceId, null, maxDimensions);
+                if (ret < 0)
+                    throw H5Error.GetExceptionFromHdf5Stack();
+
+                var growing = maxDimensions.Select(x => x == H5S.UNLIMITED).ToArray();
+
+                if (growing.Contains(true) && options?.Chunks == null)
+                    throw new ArgumentException("Growing data sets require chunking.", nameof(options));
+
+                using (var propList = new H5Id(H5P.create(H5P.DATASET_CREATE), (id) => H5P.close(id)))
+                {
+                    if (options?.Chunks != null)
+                    {
+                        ret = H5P.set_chunk(propList.Id, options.Chunks.Length, options.Chunks);
+                        H5Error.CheckH5Result(ret);
+                    }
+
+                    if (options != null && options.DeflateLevel.HasValue)
+                    {
+                        ret = H5P.set_deflate(propList.Id, options.DeflateLevel.Value);
+                        H5Error.CheckH5Result(ret);
+                    }
+
+                    var dataSetId = H5D.create(locId, name, typeId, spaceId, dcpl_id: propList.Id);
+                    if (dataSetId < 0)
+                        throw H5Error.GetExceptionFromHdf5Stack();
+
+                    return new H5DataSet(dataSetId, growing);
+                }
             }
         }
 
         private H5DataSet(long dataSetId, bool[] growing)
         {
-            _dataSetId = dataSetId;
+            Id = dataSetId;
             _growing = growing;
         }
 
@@ -124,12 +129,15 @@ namespace Mbc.Hdf5Utils
 
             _disposed = true;
 
-            var ret = H5D.close(_dataSetId);
-            if (disposing)
-                H5Error.CheckH5Result(ret);
+            lock (H5GlobalLock.Sync)
+            {
+                var ret = H5D.close(Id);
+                if (disposing)
+                    H5Error.CheckH5Result(ret);
+            }
         }
 
-        internal long Id => _dataSetId;
+        internal long Id { get; }
 
         public bool IsGrowing => _growing.Contains(true);
 
@@ -140,9 +148,12 @@ namespace Mbc.Hdf5Utils
         {
             get
             {
-                using (var typeId = new H5Id(H5D.get_type(_dataSetId), id => H5T.close(id)))
+                lock (H5GlobalLock.Sync)
                 {
-                    return H5Type.H5ToNative(typeId);
+                    using (var typeId = new H5Id(H5D.get_type(Id), id => H5T.close(id)))
+                    {
+                        return H5Type.H5ToNative(typeId);
+                    }
                 }
             }
         }
@@ -152,14 +163,17 @@ namespace Mbc.Hdf5Utils
         /// </summary>
         public ulong[] GetDimensions()
         {
-            using (var dataSpaceId = new H5Id(H5D.get_space(_dataSetId), id => H5S.close(id)))
+            lock (H5GlobalLock.Sync)
             {
-                var rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
+                using (var dataSpaceId = new H5Id(H5D.get_space(Id), id => H5S.close(id)))
+                {
+                    var rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
 
-                var dims = new ulong[rank];
-                H5Error.CheckH5Result(H5S.get_simple_extent_dims(dataSpaceId, dims, null));
+                    var dims = new ulong[rank];
+                    H5Error.CheckH5Result(H5S.get_simple_extent_dims(dataSpaceId, dims, null));
 
-                return dims;
+                    return dims;
+                }
             }
         }
 
@@ -168,14 +182,17 @@ namespace Mbc.Hdf5Utils
         /// </summary>
         public ulong[] GetMaxDimensions()
         {
-            using (var dataSpaceId = new H5Id(H5D.get_space(_dataSetId), id => H5S.close(id)))
+            lock (H5GlobalLock.Sync)
             {
-                var rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
+                using (var dataSpaceId = new H5Id(H5D.get_space(Id), id => H5S.close(id)))
+                {
+                    var rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
 
-                var maxDims = new ulong[rank];
-                H5Error.CheckH5Result(H5S.get_simple_extent_dims(dataSpaceId, null, maxDims));
+                    var maxDims = new ulong[rank];
+                    H5Error.CheckH5Result(H5S.get_simple_extent_dims(dataSpaceId, null, maxDims));
 
-                return maxDims;
+                    return maxDims;
+                }
             }
         }
 
@@ -184,33 +201,42 @@ namespace Mbc.Hdf5Utils
         /// </summary>
         public ulong[] GetChunkSize()
         {
-            using (var propListId = new H5Id(H5D.get_create_plist(_dataSetId), id => H5P.close(id)))
+            lock (H5GlobalLock.Sync)
             {
-                int rank;
-                using (var dataSpaceId = new H5Id(H5D.get_space(_dataSetId), id => H5S.close(id)))
+                using (var propListId = new H5Id(H5D.get_create_plist(Id), id => H5P.close(id)))
                 {
-                    rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
-                }
+                    int rank;
+                    using (var dataSpaceId = new H5Id(H5D.get_space(Id), id => H5S.close(id)))
+                    {
+                        rank = H5Error.CheckH5Result(H5S.get_simple_extent_ndims(dataSpaceId));
+                    }
 
-                var dims = new ulong[rank];
-                H5Error.CheckH5Result(H5P.get_chunk(propListId, rank, dims));
-                return dims;
+                    var dims = new ulong[rank];
+                    H5Error.CheckH5Result(H5P.get_chunk(propListId, rank, dims));
+                    return dims;
+                }
             }
         }
 
         public void ExtendDimensions(ulong[] newDimensions)
         {
-            var ret = H5D.set_extent(_dataSetId, newDimensions);
-            H5Error.CheckH5Result(ret);
+            lock (H5GlobalLock.Sync)
+            {
+                var ret = H5D.set_extent(Id, newDimensions);
+                H5Error.CheckH5Result(ret);
+            }
         }
 
         public H5DataSpace GetSpace()
         {
-            var spaceId = H5D.get_space(_dataSetId);
-            if (spaceId < 0)
-                throw H5Error.GetExceptionFromHdf5Stack();
+            lock (H5GlobalLock.Sync)
+            {
+                var spaceId = H5D.get_space(Id);
+                if (spaceId < 0)
+                    throw H5Error.GetExceptionFromHdf5Stack();
 
-            return new H5DataSpace(spaceId);
+                return new H5DataSpace(spaceId);
+            }
         }
 
         public void Write<T>(T[,] data, H5DataSpace fileDataSpace = null)
@@ -234,54 +260,57 @@ namespace Mbc.Hdf5Utils
             var memoryRank = data.Rank;
             var memoryDimension = Enumerable.Range(0, memoryRank).Select(i => (ulong)data.GetLength(i)).ToArray();
 
-            var memorySpace = memoryDataSpace ?? H5DataSpace.CreateSimpleFixed(memoryDimension);
-            try
+            lock (H5GlobalLock.Sync)
             {
-                if (IsGrowing && fileDataSpace == null)
+                var memorySpace = memoryDataSpace ?? H5DataSpace.CreateSimpleFixed(memoryDimension);
+                try
                 {
-                    if (memoryDataSpace != null)
-                        throw new NotImplementedException("Currently sourceDataSpace is not supported with growing data sets.");
-
-                    ulong[] start;
-                    using (var space = GetSpace())
+                    if (IsGrowing && fileDataSpace == null)
                     {
-                        var cur = space.CurrentDimensions;
-                        start = new ulong[cur.Length];
-                        var end = new ulong[cur.Length];
-                        for (var i = 0; i < cur.Length; i++)
+                        if (memoryDataSpace != null)
+                            throw new NotImplementedException("Currently sourceDataSpace is not supported with growing data sets.");
+
+                        ulong[] start;
+                        using (var space = GetSpace())
                         {
-                            if (_growing[i])
+                            var cur = space.CurrentDimensions;
+                            start = new ulong[cur.Length];
+                            var end = new ulong[cur.Length];
+                            for (var i = 0; i < cur.Length; i++)
                             {
-                                start[i] = cur[i];
-                                end[i] = cur[i] + (ulong)data.GetLength(i);
+                                if (_growing[i])
+                                {
+                                    start[i] = cur[i];
+                                    end[i] = cur[i] + (ulong)data.GetLength(i);
+                                }
+                                else
+                                {
+                                    start[i] = 0;
+                                    end[i] = cur[i];
+                                }
                             }
-                            else
-                            {
-                                start[i] = 0;
-                                end[i] = cur[i];
-                            }
+
+                            ExtendDimensions(end);
                         }
 
-                        ExtendDimensions(end);
+                        using (var space = GetSpace())
+                        {
+                            space.Select(start, memoryDimension);
+                            Write(memorySpace, memoryType, space, data);
+                        }
                     }
-
-                    using (var space = GetSpace())
+                    else
                     {
-                        space.Select(start, memoryDimension);
-                        Write(memorySpace, memoryType, space, data);
+                        Write(memorySpace, memoryType, fileDataSpace, data);
                     }
                 }
-                else
+                finally
                 {
-                    Write(memorySpace, memoryType, fileDataSpace, data);
-                }
-            }
-            finally
-            {
-                // nur Dispose, wenn der DataSpace auch erzeugt wurde
-                if (memorySpace != memoryDataSpace)
-                {
-                    memorySpace.Dispose();
+                    // nur Dispose, wenn der DataSpace auch erzeugt wurde
+                    if (memorySpace != memoryDataSpace)
+                    {
+                        memorySpace.Dispose();
+                    }
                 }
             }
         }
@@ -295,21 +324,24 @@ namespace Mbc.Hdf5Utils
         {
             var memoryType = H5Type.NativeToH5(type);
 
-            var memorySpace = memoryDataSpace ?? H5DataSpace.CreateSimpleFixed(Enumerable.Range(0, data.Rank).Select(i => (ulong)data.GetLength(i)).ToArray());
-            try
+            lock (H5GlobalLock.Sync)
             {
-                // checks
-                if (data.Rank != memorySpace.Rank)
-                    throw new ArgumentException($"Rank of memoryDataSpace ({memorySpace.Rank}) does not match data ({data.Rank})");
-
-                Read(memorySpace, memoryType, fileDataSpace, data);
-            }
-            finally
-            {
-                // nur Dispose, wenn der DataSpace auch erzeugt wurde
-                if (memorySpace != memoryDataSpace)
+                var memorySpace = memoryDataSpace ?? H5DataSpace.CreateSimpleFixed(Enumerable.Range(0, data.Rank).Select(i => (ulong)data.GetLength(i)).ToArray());
+                try
                 {
-                    memorySpace.Dispose();
+                    // checks
+                    if (data.Rank != memorySpace.Rank)
+                        throw new ArgumentException($"Rank of memoryDataSpace ({memorySpace.Rank}) does not match data ({data.Rank})");
+
+                    Read(memorySpace, memoryType, fileDataSpace, data);
+                }
+                finally
+                {
+                    // nur Dispose, wenn der DataSpace auch erzeugt wurde
+                    if (memorySpace != memoryDataSpace)
+                    {
+                        memorySpace.Dispose();
+                    }
                 }
             }
         }
@@ -325,23 +357,27 @@ namespace Mbc.Hdf5Utils
                 throw new InvalidOperationException("Append can only be used on growing data sets.");
 
             var memoryType = H5Type.NativeToH5(type);
-            using (var memorySpace = H5DataSpace.CreateSimpleFixed(new[] { 1UL }))
+
+            lock (H5GlobalLock.Sync)
             {
-                ulong[] start;
-                using (var space = GetSpace())
+                using (var memorySpace = H5DataSpace.CreateSimpleFixed(new[] { 1UL }))
                 {
-                    start = space.CurrentDimensions;
-                    if (start.Length != 1)
-                        throw new InvalidOperationException("Append can only be used on one dimensional data sets.");
+                    ulong[] start;
+                    using (var space = GetSpace())
+                    {
+                        start = space.CurrentDimensions;
+                        if (start.Length != 1)
+                            throw new InvalidOperationException("Append can only be used on one dimensional data sets.");
 
-                    var end = new[] { start[0] + 1 };
-                    ExtendDimensions(end);
-                }
+                        var end = new[] { start[0] + 1 };
+                        ExtendDimensions(end);
+                    }
 
-                using (var space = GetSpace())
-                {
-                    space.Select(start, new[] { 1UL });
-                    Write(memorySpace, memoryType, space, data);
+                    using (var space = GetSpace())
+                    {
+                        space.Select(start, new[] { 1UL });
+                        Write(memorySpace, memoryType, space, data);
+                    }
                 }
             }
         }
@@ -360,30 +396,33 @@ namespace Mbc.Hdf5Utils
                 dataSpaceDim[i + 1] = (ulong)data.GetLength(i);
             }
 
-            using (var memorySpace = H5DataSpace.CreateSimpleFixed(dataSpaceDim))
+            lock (H5GlobalLock.Sync)
             {
-                ulong[] start;
-                using (var space = GetSpace())
+                using (var memorySpace = H5DataSpace.CreateSimpleFixed(dataSpaceDim))
                 {
-                    start = space.CurrentDimensions;
-                    if ((start.Length - 1) != data.Rank)
-                        throw new InvalidOperationException("Append can only be used if dimension is one less.");
-
-                    var end = (ulong[])start.Clone();
-                    end[0]++;
-                    ExtendDimensions(end);
-                }
-
-                using (var space = GetSpace())
-                {
-                    for (int i = 0; i < data.Rank; i++)
+                    ulong[] start;
+                    using (var space = GetSpace())
                     {
-                        start[i + 1] = 0;
+                        start = space.CurrentDimensions;
+                        if ((start.Length - 1) != data.Rank)
+                            throw new InvalidOperationException("Append can only be used if dimension is one less.");
+
+                        var end = (ulong[])start.Clone();
+                        end[0]++;
+                        ExtendDimensions(end);
                     }
 
-                    var count = (ulong[])dataSpaceDim.Clone();
-                    space.Select(start, count);
-                    Write(memorySpace, memoryType, space, data);
+                    using (var space = GetSpace())
+                    {
+                        for (int i = 0; i < data.Rank; i++)
+                        {
+                            start[i + 1] = 0;
+                        }
+
+                        var count = (ulong[])dataSpaceDim.Clone();
+                        space.Select(start, count);
+                        Write(memorySpace, memoryType, space, data);
+                    }
                 }
             }
         }
@@ -422,31 +461,34 @@ namespace Mbc.Hdf5Utils
                 .Select(x => (ulong)(x == 0 ? count : data.GetLength(x)))
                 .ToArray();
 
-            using (var memorySpace = H5DataSpace.CreateSimpleFixed(dataSpaceDim))
+            lock (H5GlobalLock.Sync)
             {
-                ulong[] start;
-                using (var space = GetSpace())
+                using (var memorySpace = H5DataSpace.CreateSimpleFixed(dataSpaceDim))
                 {
-                    start = space.CurrentDimensions;
-                    if (start.Length != data.Rank)
-                        throw new InvalidOperationException("AppendAll can only be used if dimension matches.");
-
-                    // 1. Dimension wird erweitert (growing)
-                    var end = (ulong[])start.Clone();
-                    end[0] += (ulong)count;
-                    ExtendDimensions(end);
-                }
-
-                using (var space = GetSpace())
-                {
-                    // Start: alle ausser 1. Dimension auf 0 setzen
-                    for (int i = 1; i < data.Rank; i++)
+                    ulong[] start;
+                    using (var space = GetSpace())
                     {
-                        start[i] = 0;
+                        start = space.CurrentDimensions;
+                        if (start.Length != data.Rank)
+                            throw new InvalidOperationException("AppendAll can only be used if dimension matches.");
+
+                        // 1. Dimension wird erweitert (growing)
+                        var end = (ulong[])start.Clone();
+                        end[0] += (ulong)count;
+                        ExtendDimensions(end);
                     }
 
-                    space.Select(start, dataSpaceDim);
-                    Write(memorySpace, memoryType, space, data);
+                    using (var space = GetSpace())
+                    {
+                        // Start: alle ausser 1. Dimension auf 0 setzen
+                        for (int i = 1; i < data.Rank; i++)
+                        {
+                            start[i] = 0;
+                        }
+
+                        space.Select(start, dataSpaceDim);
+                        Write(memorySpace, memoryType, space, data);
+                    }
                 }
             }
         }
@@ -464,7 +506,7 @@ namespace Mbc.Hdf5Utils
             GCHandle gcHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
             try
             {
-                var ret = H5D.write(_dataSetId, memoryDataType.Id, memoryDataSpace.Id, fileDataSpace != null ? fileDataSpace.Id : H5S.ALL, H5P.DEFAULT, gcHandle.AddrOfPinnedObject());
+                var ret = H5D.write(Id, memoryDataType.Id, memoryDataSpace.Id, fileDataSpace != null ? fileDataSpace.Id : H5S.ALL, H5P.DEFAULT, gcHandle.AddrOfPinnedObject());
                 H5Error.CheckH5Result(ret);
             }
             finally
@@ -481,7 +523,7 @@ namespace Mbc.Hdf5Utils
             GCHandle gcHandle = GCHandle.Alloc(data, GCHandleType.Pinned);
             try
             {
-                H5Error.CheckH5Result(H5D.read(_dataSetId, memoryDataType.Id, memoryDataSpace.Id, fileDataSpace != null ? fileDataSpace.Id : H5S.ALL, H5P.DEFAULT, gcHandle.AddrOfPinnedObject()));
+                H5Error.CheckH5Result(H5D.read(Id, memoryDataType.Id, memoryDataSpace.Id, fileDataSpace != null ? fileDataSpace.Id : H5S.ALL, H5P.DEFAULT, gcHandle.AddrOfPinnedObject()));
             }
             finally
             {
@@ -581,9 +623,12 @@ namespace Mbc.Hdf5Utils
                     }
                 }
 
-                using (var space = H5DataSpace.CreateSimple(current, max))
+                lock (H5GlobalLock.Sync)
                 {
-                    return H5DataSet.Create(file, _name, _type, space, _options);
+                    using (var space = H5DataSpace.CreateSimple(current, max))
+                    {
+                        return H5DataSet.Create(file, _name, _type, space, _options);
+                    }
                 }
             }
         }

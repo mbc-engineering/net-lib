@@ -1,7 +1,7 @@
-﻿using System;
+﻿using HDF.PInvoke;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using HDF.PInvoke;
 
 namespace Mbc.Hdf5Utils
 {
@@ -17,22 +17,21 @@ namespace Mbc.Hdf5Utils
             OpenOrCreate = H5F.ACC_CREAT,
         }
 
-        private readonly long _fileId;
         private bool _disposed;
 
         public H5File(string filename, Flags flags)
         {
-            if ((flags & (Flags.CreateOnly | Flags.OpenOrCreate)) != 0)
+            lock (H5GlobalLock.Sync)
             {
-                _fileId = H5F.create(filename, (uint)flags);
+                if ((flags & (Flags.CreateOnly | Flags.OpenOrCreate)) != 0)
+                {
+                    Id = H5Error.CheckH5Result(H5F.create(filename, (uint)flags));
+                }
+                else
+                {
+                    Id = H5Error.CheckH5Result(H5F.open(filename, (uint)flags));
+                }
             }
-            else
-            {
-                _fileId = H5F.open(filename, (uint)flags);
-            }
-
-            if (_fileId < 0)
-                throw H5Error.GetExceptionFromHdf5Stack();
         }
 
         ~H5File()
@@ -42,17 +41,18 @@ namespace Mbc.Hdf5Utils
 
         public string GetName()
         {
-            var len = H5F.get_name(_fileId, null, IntPtr.Zero).ToInt32();
-            H5Error.CheckH5Result(len);
+            lock (H5GlobalLock.Sync)
+            {
+                var len = H5Error.CheckH5Result(H5F.get_name(Id, null, IntPtr.Zero).ToInt32());
+                var name = new StringBuilder(len + 1);
+                var ret = H5F.get_name(Id, name, new IntPtr(name.Capacity));
+                H5Error.CheckH5Result(ret.ToInt32());
 
-            var name = new StringBuilder(len + 1);
-            var ret = H5F.get_name(_fileId, name, new IntPtr(name.Capacity));
-            H5Error.CheckH5Result(ret.ToInt32());
-
-            return name.ToString();
+                return name.ToString();
+            }
         }
 
-        internal long Id => _fileId;
+        internal long Id { get; }
 
         public void Dispose()
         {
@@ -64,12 +64,12 @@ namespace Mbc.Hdf5Utils
         {
             if (_disposed)
                 return;
+
             _disposed = true;
 
-            // When file creation had failled is id=-1, so nothing to close there
-            if (_fileId >= 0)
+            lock (H5GlobalLock.Sync)
             {
-                var ret = H5F.close(_fileId);
+                var ret = H5F.close(Id);
 
                 if (disposing)
                 {
@@ -80,32 +80,36 @@ namespace Mbc.Hdf5Utils
 
         public void Flush()
         {
-            var ret = H5F.flush(_fileId, H5F.scope_t.GLOBAL);
-            H5Error.CheckH5Result(ret);
+            lock (H5GlobalLock.Sync)
+            {
+                var ret = H5F.flush(Id, H5F.scope_t.GLOBAL);
+                H5Error.CheckH5Result(ret);
+            }
         }
 
         public H5Group OpenGroup(string name)
         {
-            var groupId = H5G.open(_fileId, name);
-            if (groupId < 0)
-                throw H5Error.GetExceptionFromHdf5Stack();
-            return new H5Group(groupId);
+            lock (H5GlobalLock.Sync)
+            {
+                var groupId = H5Error.CheckH5Result(H5G.open(Id, name));
+                return new H5Group(groupId);
+            }
         }
 
         public H5Group CreateGroup(string name)
         {
-            H5Group.CreateMissingGroups(_fileId, name);
+            H5Group.CreateMissingGroups(Id, name);
             return OpenGroup(name);
         }
 
         public void MakeGroups(string name)
         {
-            H5Group.CreateMissingGroups(_fileId, name);
+            H5Group.CreateMissingGroups(Id, name);
         }
 
         public IEnumerable<string> GetNames()
         {
-            return new H5LinkIterator(_fileId).Names;
+            return new H5LinkIterator(Id).Names;
         }
     }
 }

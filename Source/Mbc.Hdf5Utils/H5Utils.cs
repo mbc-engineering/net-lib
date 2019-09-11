@@ -14,7 +14,8 @@ namespace Mbc.Hdf5Utils
         {
             lock (_initLock)
             {
-                if (_initialized) return;
+                if (_initialized)
+                    return;
                 _initialized = true;
 
                 H5Error.CheckH5Result(H5.open());
@@ -34,7 +35,8 @@ namespace Mbc.Hdf5Utils
 
         public static void CloseH5()
         {
-            if (Interlocked.Exchange(ref _destroyed, 1) == 1) return;
+            if (Interlocked.Exchange(ref _destroyed, 1) == 1)
+                return;
             H5Error.CheckH5Result(H5.close());
         }
 

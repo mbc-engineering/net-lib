@@ -12,8 +12,11 @@ namespace Mbc.Hdf5Utils
             Id = id;
             _closer = closer;
 
-            if (Id < 0)
-                throw H5Error.GetExceptionFromHdf5Stack();
+            lock (H5GlobalLock.Sync)
+            {
+                if (Id < 0)
+                    throw H5Error.GetExceptionFromHdf5Stack();
+            }
         }
 
         ~H5Id()
@@ -40,9 +43,12 @@ namespace Mbc.Hdf5Utils
                 return;
             _disposed = true;
 
-            var ret = _closer(Id);
-            if (disposing)
-                H5Error.CheckH5Result(ret);
+            lock (H5GlobalLock.Sync)
+            {
+                var ret = _closer(Id);
+                if (disposing)
+                    H5Error.CheckH5Result(ret);
+            }
         }
     }
 }

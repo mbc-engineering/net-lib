@@ -1,11 +1,14 @@
-﻿using System;
+﻿using HDF.PInvoke;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
-using HDF.PInvoke;
 
 namespace Mbc.Hdf5Utils
 {
+    /// <summary>
+    /// Stellt den Zugriff auf HDF5-Attribute zur Verfügung.
+    /// </summary>
     public class H5Attribute
     {
         private readonly long _locId;
@@ -20,47 +23,65 @@ namespace Mbc.Hdf5Utils
             _locId = dataSet.Id;
         }
 
+        /// <summary>
+        /// Liefert alle Attribut-Namen zurück.
+        /// </summary>
         public IEnumerable<string> GetAttributeNames()
         {
             var objectInfo = default(H5O.info_t);
-            var ret = H5O.get_info(_locId, ref objectInfo);
-            H5Error.CheckH5Result(ret);
+
+            lock (H5GlobalLock.Sync)
+            {
+                var ret = H5O.get_info(_locId, ref objectInfo);
+                H5Error.CheckH5Result(ret);
+            }
 
             for (ulong index = 0; index < objectInfo.num_attrs; index++)
             {
                 var name = new StringBuilder();
-                if (H5A.get_name_by_idx(_locId, ".", H5.index_t.NAME, H5.iter_order_t.NATIVE, index, name, new IntPtr(1024)).ToInt32() < 0)
+
+                lock (H5GlobalLock.Sync)
                 {
-                    throw H5Error.GetExceptionFromHdf5Stack();
+                    var ret = H5A.get_name_by_idx(_locId, ".", H5.index_t.NAME, H5.iter_order_t.NATIVE, index, name, new IntPtr(1024)).ToInt32();
+                    H5Error.CheckH5Result(ret);
                 }
 
                 yield return name.ToString();
             }
         }
 
+        /// <summary>
+        /// Schreibt ein Attribut mit dem Namen <paramref name="name"/> und
+        /// den Wert <paramref name="value"/>.
+        /// </summary>
         public void Write(string name, string value)
         {
             var valueBuffer = Encoding.UTF8.GetBytes(value);
-            using (H5Id type = new H5Id(H5T.create(H5T.class_t.STRING, new IntPtr(valueBuffer.Length)), H5T.close),
-                dspace = new H5Id(H5S.create(H5S.class_t.SCALAR), H5S.close))
-            {
-                var ret = H5T.set_cset(type, H5T.cset_t.UTF8);
-                H5Error.CheckH5Result(ret);
 
-                using (var attribute = new H5Id(H5A.create(_locId, name, type, dspace), H5A.close))
+            var valuePtr = Marshal.AllocHGlobal(valueBuffer.Length);
+            try
+            {
+                Marshal.Copy(valueBuffer, 0, valuePtr, valueBuffer.Length);
+
+                lock (H5GlobalLock.Sync)
                 {
-                    var valuePtr = Marshal.AllocHGlobal(valueBuffer.Length);
-                    try
+                    using (H5Id type = new H5Id(H5T.create(H5T.class_t.STRING, new IntPtr(valueBuffer.Length)), H5T.close),
+                        dspace = new H5Id(H5S.create(H5S.class_t.SCALAR), H5S.close))
                     {
-                        Marshal.Copy(valueBuffer, 0, valuePtr, valueBuffer.Length);
-                        ret = H5A.write(attribute, type, valuePtr);
+                        var ret = H5T.set_cset(type, H5T.cset_t.UTF8);
                         H5Error.CheckH5Result(ret);
-                    }
-                    finally
-                    {
-                        Marshal.FreeHGlobal(valuePtr);
+
+                        using (var attribute = new H5Id(H5A.create(_locId, name, type, dspace), H5A.close))
+                        {
+                            ret = H5A.write(attribute, type, valuePtr);
+                            H5Error.CheckH5Result(ret);
+                        }
                     }
                 }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(valuePtr);
             }
         }
 
@@ -96,39 +117,47 @@ namespace Mbc.Hdf5Utils
 
         private void WriteScalar(long h5NativeTypeId, string name, int size, Action<IntPtr> writePtr)
         {
-            using (H5Id dspace = new H5Id(H5S.create(H5S.class_t.SCALAR), H5S.close))
+            var valuePtr = Marshal.AllocHGlobal(size);
+            try
             {
-                H5Id attribute = null;
-                try
-                {
-                    if (H5Error.CheckH5Result(H5A.exists(_locId, name)) > 0)
-                    {
-                        attribute = new H5Id(H5A.open(_locId, name), H5A.close);
-                    }
-                    else
-                    {
-                        attribute = new H5Id(H5A.create(_locId, name, h5NativeTypeId, dspace), H5A.close);
-                    }
+                writePtr(valuePtr);
 
-                    var valuePtr = Marshal.AllocHGlobal(size);
-                    try
-                    {
-                        writePtr(valuePtr);
-                        var ret = H5A.write(attribute, h5NativeTypeId, valuePtr);
-                        H5Error.CheckH5Result(ret);
-                    }
-                    finally
-                    {
-                        Marshal.FreeHGlobal(valuePtr);
-                    }
-                }
-                finally
+                lock (H5GlobalLock.Sync)
                 {
-                    attribute?.Dispose();
+                    using (H5Id dspace = new H5Id(H5S.create(H5S.class_t.SCALAR), H5S.close))
+                    {
+                        H5Id attribute = null;
+                        try
+                        {
+                            if (H5Error.CheckH5Result(H5A.exists(_locId, name)) > 0)
+                            {
+                                attribute = new H5Id(H5A.open(_locId, name), H5A.close);
+                            }
+                            else
+                            {
+                                attribute = new H5Id(H5A.create(_locId, name, h5NativeTypeId, dspace), H5A.close);
+                            }
+
+                            var ret = H5A.write(attribute, h5NativeTypeId, valuePtr);
+                            H5Error.CheckH5Result(ret);
+                        }
+                        finally
+                        {
+                            attribute?.Dispose();
+                        }
+                    }
                 }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(valuePtr);
             }
         }
 
+        /// <summary>
+        /// Liest das Attribut mit dem Namen <paramref name="name"/> als
+        /// String.
+        /// </summary>
         public string ReadString(string name)
         {
             return (string)Read(name);
@@ -157,51 +186,68 @@ namespace Mbc.Hdf5Utils
 
         private T ReadScalar<T>(long h5NativeTypeId, string name, int size, Func<IntPtr, T> readPtr)
         {
-            using (H5Id attribute = new H5Id(H5A.open(_locId, name), H5A.close))
+            var bufferPtr = Marshal.AllocHGlobal(size);
+            try
             {
-                var bufferPtr = Marshal.AllocHGlobal(size);
-                try
+                lock (H5GlobalLock.Sync)
                 {
-                    var ret = H5A.read(attribute, h5NativeTypeId, bufferPtr);
-                    H5Error.CheckH5Result(ret);
-                    return readPtr(bufferPtr);
+                    using (H5Id attribute = new H5Id(H5A.open(_locId, name), H5A.close))
+                    {
+                        var ret = H5A.read(attribute, h5NativeTypeId, bufferPtr);
+                        H5Error.CheckH5Result(ret);
+                    }
                 }
-                finally
-                {
-                    Marshal.FreeHGlobal(bufferPtr);
-                }
+
+                return readPtr(bufferPtr);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(bufferPtr);
             }
         }
 
         public object Read(string name)
         {
-            using (H5Id attribute = new H5Id(H5A.open(_locId, name), H5A.close),
+            lock (H5GlobalLock.Sync)
+            {
+                using (H5Id attribute = new H5Id(H5A.open(_locId, name), H5A.close),
                 type = new H5Id(H5A.get_type(attribute), H5T.close),
                 typeMem = new H5Id(H5T.get_native_type(type, H5T.direction_t.ASCEND), H5T.close))
-            {
-                var size = H5T.get_size(type).ToInt32();
+                {
+                    var size = H5T.get_size(type).ToInt32();
 
-                var bufferPtr = Marshal.AllocHGlobal(size);
-                try
-                {
-                    var ret = H5A.read(attribute, type, bufferPtr);
-                    H5Error.CheckH5Result(ret);
-                    return ConvertData(bufferPtr, type, size);
-                }
-                finally
-                {
-                    Marshal.FreeHGlobal(bufferPtr);
+                    var bufferPtr = Marshal.AllocHGlobal(size);
+                    try
+                    {
+                        var ret = H5A.read(attribute, type, bufferPtr);
+                        H5Error.CheckH5Result(ret);
+                        return ConvertData(bufferPtr, type, size);
+                    }
+                    finally
+                    {
+                        Marshal.FreeHGlobal(bufferPtr);
+                    }
                 }
             }
         }
 
         private object ConvertData(IntPtr bufferPtr, long typeId, int size)
         {
-            var typeClass = H5T.get_class(typeId);
+            H5T.class_t typeClass;
+            lock (H5GlobalLock.Sync)
+            {
+                typeClass = H5T.get_class(typeId);
+            }
+
             switch (typeClass)
             {
                 case H5T.class_t.STRING:
-                    var cset = H5T.get_cset(typeId);
+                    H5T.cset_t cset;
+                    lock (H5GlobalLock.Sync)
+                    {
+                        cset = H5T.get_cset(typeId);
+                    }
+
                     switch (cset)
                     {
                         case H5T.cset_t.ASCII:

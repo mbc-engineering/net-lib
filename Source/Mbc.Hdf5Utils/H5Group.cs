@@ -6,12 +6,11 @@ namespace Mbc.Hdf5Utils
 {
     public class H5Group : IDisposable
     {
-        private readonly long _groupId;
         private bool _disposed;
 
         internal H5Group(long groupId)
         {
-            _groupId = groupId;
+            Id = groupId;
         }
 
         ~H5Group()
@@ -19,7 +18,7 @@ namespace Mbc.Hdf5Utils
             Dispose(false);
         }
 
-        internal long Id => _groupId;
+        internal long Id { get; }
 
         public void Dispose()
         {
@@ -33,10 +32,9 @@ namespace Mbc.Hdf5Utils
                 return;
             _disposed = true;
 
-            // does not work in x86 process, throws: System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.
-            if (Environment.Is64BitProcess)
+            lock (H5GlobalLock.Sync)
             {
-                var ret = H5G.close(_groupId);
+                var ret = H5G.close(Id);
                 if (disposing)
                 {
                     H5Error.CheckH5Result(ret);
@@ -46,21 +44,22 @@ namespace Mbc.Hdf5Utils
 
         public H5Group OpenGroup(string name)
         {
-            var groupId = H5G.open(_groupId, name);
-            if (groupId < 0)
-                throw H5Error.GetExceptionFromHdf5Stack();
-            return new H5Group(groupId);
+            lock (H5GlobalLock.Sync)
+            {
+                var groupId = H5Error.CheckH5Result(H5G.open(Id, name));
+                return new H5Group(groupId);
+            }
         }
 
         public H5Group CreateGroup(string name)
         {
-            H5Group.CreateMissingGroups(_groupId, name);
+            H5Group.CreateMissingGroups(Id, name);
             return OpenGroup(name);
         }
 
         public IEnumerable<string> GetNames()
         {
-            return new H5LinkIterator(_groupId).Names;
+            return new H5LinkIterator(Id).Names;
         }
 
         internal static void CreateMissingGroups(long id, string name)
@@ -102,15 +101,15 @@ namespace Mbc.Hdf5Utils
                     remainingName = string.Empty;
                 }
 
-                var ret = H5L.exists(id, curName);
-                H5Error.CheckH5Result(ret);
-                if (ret == 0)
+                lock (H5GlobalLock.Sync)
                 {
-                    var gid = H5G.create(id, curName);
-                    if (gid < 0)
-                        throw H5Error.GetExceptionFromHdf5Stack();
-                    ret = H5G.close(gid);
-                    H5Error.CheckH5Result(ret);
+                    if (H5Error.CheckH5Result(H5L.exists(id, curName)) == 0)
+                    {
+                        using (var newid = new H5Id(H5G.create(id, curName), H5G.close))
+                        {
+                            // nothing to do, only create
+                        }
+                    }
                 }
             }
         }

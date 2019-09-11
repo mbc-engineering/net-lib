@@ -8,7 +8,6 @@ namespace Mbc.Hdf5Utils
     {
         public const ulong UNLIMITED = H5S.UNLIMITED;
 
-        private readonly long _dataSpaceId;
         private bool _disposed;
 
         public static H5DataSpace CreateSimpleFixed(ulong[] dimension)
@@ -28,18 +27,21 @@ namespace Mbc.Hdf5Utils
                 maxDimension = Enumerable.Repeat(UNLIMITED, rank).ToArray();
             }
 
-            var dataSpaceId = H5S.create_simple(rank, dimension, maxDimension);
-            if (dataSpaceId < 0)
-                throw H5Error.GetExceptionFromHdf5Stack();
+            lock (H5GlobalLock.Sync)
+            {
+                var dataSpaceId = H5S.create_simple(rank, dimension, maxDimension);
+                if (dataSpaceId < 0)
+                    throw H5Error.GetExceptionFromHdf5Stack();
 
-            return new H5DataSpace(dataSpaceId);
+                return new H5DataSpace(dataSpaceId);
+            }
         }
 
         public static HyperslabSelectionBuilder CreateSelectionBuilder() => new HyperslabSelectionBuilder();
 
         internal H5DataSpace(long dataSpaceId)
         {
-            _dataSpaceId = dataSpaceId;
+            Id = dataSpaceId;
         }
 
         ~H5DataSpace()
@@ -60,22 +62,28 @@ namespace Mbc.Hdf5Utils
 
             _disposed = true;
 
-            var ret = H5S.close(_dataSpaceId);
-            if (disposing)
-                H5Error.CheckH5Result(ret);
+            lock (H5GlobalLock.Sync)
+            {
+                var ret = H5S.close(Id);
+                if (disposing)
+                    H5Error.CheckH5Result(ret);
+            }
         }
 
-        internal long Id => _dataSpaceId;
+        internal long Id { get; }
 
         public int Rank
         {
             get
             {
-                var rank = H5S.get_simple_extent_ndims(_dataSpaceId);
-                if (rank < 0)
-                    throw H5Error.GetExceptionFromHdf5Stack();
+                lock (H5GlobalLock.Sync)
+                {
+                    var rank = H5S.get_simple_extent_ndims(Id);
+                    if (rank < 0)
+                        throw H5Error.GetExceptionFromHdf5Stack();
 
-                return rank;
+                    return rank;
+                }
             }
         }
 
@@ -86,9 +94,12 @@ namespace Mbc.Hdf5Utils
                 var rank = Rank;
                 var dims = new ulong[rank];
 
-                var ret = H5S.get_simple_extent_dims(_dataSpaceId, dims, null);
-                H5Error.CheckH5Result(ret);
-                return dims;
+                lock (H5GlobalLock.Sync)
+                {
+                    var ret = H5S.get_simple_extent_dims(Id, dims, null);
+                    H5Error.CheckH5Result(ret);
+                    return dims;
+                }
             }
         }
 
@@ -96,13 +107,16 @@ namespace Mbc.Hdf5Utils
         {
             get
             {
-                return H5Error.CheckH5Result(H5S.get_simple_extent_npoints(_dataSpaceId));
+                lock (H5GlobalLock.Sync)
+                {
+                    return H5Error.CheckH5Result(H5S.get_simple_extent_npoints(Id));
+                }
             }
         }
 
         public HyperslabSelector Select(ulong[] start, ulong[] count, ulong[] stride = null, ulong[] block = null)
         {
-            return new HyperslabSelector(_dataSpaceId, start, stride, count, block);
+            return new HyperslabSelector(Id, start, stride, count, block);
         }
 
         public class HyperslabSelector
@@ -117,8 +131,11 @@ namespace Mbc.Hdf5Utils
 
             private void AddSelect(H5S.seloper_t op, ulong[] start, ulong[] stride, ulong[] count, ulong[] block)
             {
-                var ret = H5S.select_hyperslab(_dataSetId, op, start, stride, count, block);
-                H5Error.CheckH5Result(ret);
+                lock (H5GlobalLock.Sync)
+                {
+                    var ret = H5S.select_hyperslab(_dataSetId, op, start, stride, count, block);
+                    H5Error.CheckH5Result(ret);
+                }
             }
 
             public HyperslabSelector Or(ulong[] start, ulong[] count, ulong[] stride = null, ulong[] block = null)

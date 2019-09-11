@@ -43,7 +43,10 @@ namespace Mbc.Hdf5Utils
 
         public static Type H5ToNative(long typeId)
         {
-            return _nativeTypes.First(x => H5Error.CheckH5Result(H5T.equal(x.Value.Id, typeId)) > 0).Key;
+            lock (H5GlobalLock.Sync)
+            {
+                return _nativeTypes.First(x => H5Error.CheckH5Result(H5T.equal(x.Value.Id, typeId)) > 0).Key;
+            }
         }
 
         private H5Type(long typeId)

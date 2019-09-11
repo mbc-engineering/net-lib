@@ -51,9 +51,12 @@ namespace Mbc.Hdf5Utils
 
             public ErrorWalker()
             {
-                var res = H5E.walk(H5E.DEFAULT, H5E.direction_t.H5E_WALK_UPWARD, Walker, IntPtr.Zero);
-                if (res < 0)
-                    throw new InvalidOperationException("Could not walk HDF5 error.");
+                lock (H5GlobalLock.Sync)
+                {
+                    var res = H5E.walk(H5E.DEFAULT, H5E.direction_t.H5E_WALK_UPWARD, Walker, IntPtr.Zero);
+                    if (res < 0)
+                        throw new InvalidOperationException("Could not walk HDF5 error.");
+                }
 
                 /*
                  * Aus einen unbekannten Grund können die Error-Messages nicht im Callback des Walkers
@@ -67,10 +70,13 @@ namespace Mbc.Hdf5Utils
                         H5E.type_t type = default(H5E.type_t); // wird eigentlich nicht benötigt
 
                         var majorMsg = new StringBuilder(1024);
-                        H5E.get_msg(foo.maj_num, ref type, majorMsg, new IntPtr(majorMsg.Capacity));
-
                         var minorMsg = new StringBuilder(1024);
-                        H5E.get_msg(foo.min_num, ref type, minorMsg, new IntPtr(majorMsg.Capacity));
+
+                        lock (H5GlobalLock.Sync)
+                        {
+                            H5E.get_msg(foo.maj_num, ref type, majorMsg, new IntPtr(majorMsg.Capacity));
+                            H5E.get_msg(foo.min_num, ref type, minorMsg, new IntPtr(majorMsg.Capacity));
+                        }
 
                         var msg = $"{foo.func_name}: {foo.desc} -> {majorMsg} - {minorMsg}";
 
