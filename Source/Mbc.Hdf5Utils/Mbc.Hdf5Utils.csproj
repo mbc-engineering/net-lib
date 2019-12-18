@@ -3,7 +3,7 @@
   <Import Project="$(SolutionDir)Build\common.props" />
   <PropertyGroup>
     <!-- common nuget configuration see common.props-->
-    <VersionPrefix>0.5.3</VersionPrefix>
+    <VersionPrefix>0.5.4</VersionPrefix>
     <VersionSuffix></VersionSuffix>
 
     <Product>Mbc.Hdf5Utils</Product>
@@ -14,6 +14,6 @@
 
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="HDF.PInvoke" Version="1.10.3" />
+    <PackageReference Include="HDF.PInvoke" Version="1.10.5.2" />
   </ItemGroup>
 </Project>
