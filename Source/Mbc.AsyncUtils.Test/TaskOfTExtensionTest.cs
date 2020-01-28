@@ -6,29 +6,31 @@ using Xunit;
 
 namespace Mbc.AsyncUtils.Test
 {
-    public class TaskExtensionTest
+    public class TaskOfTExtensionTest
     {
         [Fact]
         public void TimeoutAfterNormal()
         {
             // Arrange
-            var tcs = new TaskCompletionSource();
+            var tcs = new TaskCompletionSource<object>();
             var task = tcs.Task;
+            var result = new object();
 
             // Act
             var monitoredTask = task.TimeoutAfter(TimeSpan.FromSeconds(1));
 
             // Assert
             monitoredTask.Status.Should().Be(TaskStatus.WaitingForActivation);
-            tcs.SetResult();
+            tcs.SetResult(result);
             monitoredTask.Status.Should().Be(TaskStatus.RanToCompletion);
+            monitoredTask.Result.Should().BeSameAs(result);
         }
 
         [Fact]
         public void TimeoutAfterException()
         {
             // Arrange
-            var tcs = new TaskCompletionSource();
+            var tcs = new TaskCompletionSource<object>();
             var task = tcs.Task;
             var ex = new Exception("foo");
 
@@ -46,7 +48,7 @@ namespace Mbc.AsyncUtils.Test
         public void TimeoutAfterCancelled()
         {
             // Arrange
-            var tcs = new TaskCompletionSource();
+            var tcs = new TaskCompletionSource<object>();
             var task = tcs.Task;
 
             // Act
@@ -62,11 +64,11 @@ namespace Mbc.AsyncUtils.Test
         public void TimeoutAfterTimeout()
         {
             // Arrange
-            var tcs = new TaskCompletionSource();
+            var tcs = new TaskCompletionSource<object>();
             var task = tcs.Task;
 
             // Act
-            Func<Task> func = async () => await task.TimeoutAfter(TimeSpan.FromSeconds(1));
+            Func<Task<object>> func = async () => await task.TimeoutAfter(TimeSpan.FromSeconds(1));
 
             // Assert
             func.Should().Throw<TimeoutException>();
@@ -76,7 +78,7 @@ namespace Mbc.AsyncUtils.Test
         public void TimeoutAfterCancelledFromCancellationToken()
         {
             // Arrange
-            var tcs = new TaskCompletionSource();
+            var tcs = new TaskCompletionSource<object>();
             var task = tcs.Task;
             var cts = new CancellationTokenSource();
 
@@ -96,28 +98,6 @@ namespace Mbc.AsyncUtils.Test
             }
 
             monitoredTask.Status.Should().Be(TaskStatus.Canceled);
-        }
-
-        private class TaskCompletionSource
-        {
-            private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();
-
-            public Task Task => _tcs.Task;
-
-            public void SetResult()
-            {
-                _tcs.SetResult(null);
-            }
-
-            public void SetException(Exception exception)
-            {
-                _tcs.SetException(exception);
-            }
-
-            public void SetCanceled()
-            {
-                _tcs.SetCanceled();
-            }
         }
     }
 }

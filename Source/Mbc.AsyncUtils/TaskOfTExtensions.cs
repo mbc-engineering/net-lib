@@ -7,20 +7,22 @@ namespace Mbc.AsyncUtils
     /// <summary>
     /// Hilfsmethoden für Tasks.
     /// </summary>
-    public static class TaskExtensions
+    public static class TaskOfTExtensions
     {
         /// <summary>
-        /// Liefert eine Task, die entweder normal beendet wird oder über einen Timeout.
+        /// Liefert eine Task, die entweder normal beendet wird oder über
+        /// einen Timeout.
         /// </summary>
-        public static Task TimeoutAfter(this Task task, TimeSpan timeout)
+        public static Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
         {
             return TimeoutAfter(task, timeout, CancellationToken.None);
         }
 
         /// <summary>
-        /// Liefert eine Task, die entweder normal beendet wird oder über einen Timeout oder über ein cancelatinToken
+        /// Liefert eine Task, die entweder normal beendet wird oder über
+        /// einen Timeout.
         /// </summary>
-        public static Task TimeoutAfter(this Task task, TimeSpan timeout, CancellationToken cancellationToken)
+        public static Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout, CancellationToken cancellationToken)
         {
             // Implementation from https://blogs.msdn.microsoft.com/pfxteam/2011/11/10/crafting-a-task-timeoutafter-method/
 
@@ -36,27 +38,27 @@ namespace Mbc.AsyncUtils
             if (timeout == TimeSpan.Zero)
             {
                 // We've already timed out.
-                return Task.FromException(new TimeoutException());
+                return Task.FromException<T>(new TimeoutException());
             }
 
             // tcs.Task will be returned as a proxy to the caller
-            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+            TaskCompletionSource<T> tcs = new TaskCompletionSource<T>();
 
             // Set up a timer to complete after the specified timeout period
             var timer = new Timer(
-                state => ((TaskCompletionSource<object>)state).TrySetException(new TimeoutException()),
+                state => ((TaskCompletionSource<T>)state).TrySetException(new TimeoutException()),
                 tcs,
                 timeout,
                 TimeSpan.FromMilliseconds(-1));
 
             // Register cancellation callback
             var cancellationTokenRegistration = cancellationToken.Register(
-                (state) => ((TaskCompletionSource<object>)state).TrySetCanceled(),
+                (state) => ((TaskCompletionSource<T>)state).TrySetCanceled(),
                 tcs);
 
             // Wire up the logic for what happens when source task completes
             task.ContinueWith(
-                (antecedent, state) => MarshalTaskResults(antecedent, (TaskCompletionSource<object>)state),
+                (antecedent, state) => MarshalTaskResults(antecedent, (TaskCompletionSource<T>)state),
                 tcs,
                 CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously,
@@ -83,7 +85,7 @@ namespace Mbc.AsyncUtils
             return proxyTask;
         }
 
-        private static void MarshalTaskResults(Task source, TaskCompletionSource<object> proxy)
+        private static void MarshalTaskResults<TResult>(Task<TResult> source, TaskCompletionSource<TResult> proxy)
         {
             switch (source.Status)
             {
@@ -94,7 +96,7 @@ namespace Mbc.AsyncUtils
                     proxy.TrySetCanceled();
                     break;
                 case TaskStatus.RanToCompletion:
-                    proxy.TrySetResult(null);
+                    proxy.TrySetResult(source.Result);
                     break;
             }
         }
