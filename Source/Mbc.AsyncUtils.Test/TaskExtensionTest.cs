@@ -98,6 +98,38 @@ namespace Mbc.AsyncUtils.Test
             monitoredTask.Status.Should().Be(TaskStatus.Canceled);
         }
 
+        [Theory]
+        [InlineData(-922337203685476.0, false)] // minvalue
+        [InlineData(-1, false)]
+        [InlineData(0, false)]
+        [InlineData(1, true)]
+        [InlineData(4233600000, true)] // 49 Days
+        [InlineData(4233600001, false)] // 49 Days + 1ms
+        [InlineData(922337203685476.0, false)] // max value
+        public async Task TimeoutAfterTimOutRange(double timeOutMs, bool pass)
+        {
+            // Arrange
+            var ts = TimeSpan.FromMilliseconds(timeOutMs);
+            var tcs = new TaskCompletionSource();
+            var task = tcs.Task;
+            var cts = new CancellationTokenSource();
+
+            // Act
+            var monitoredTask = Record.ExceptionAsync(() => task.TimeoutAfter(ts, cts.Token));
+            cts.Cancel();
+            Exception ex = await monitoredTask;
+
+            // Assert
+            if (pass)
+            {
+                ex.Should().BeOfType<TaskCanceledException>();
+            }
+            else
+            {
+                ex.Should().BeOfType<ArgumentOutOfRangeException>();
+            }
+        }
+
         private class TaskCompletionSource
         {
             private readonly TaskCompletionSource<object> _tcs = new TaskCompletionSource<object>();

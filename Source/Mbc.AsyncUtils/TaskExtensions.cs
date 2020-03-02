@@ -11,6 +11,7 @@ namespace Mbc.AsyncUtils
     {
         /// <summary>
         /// Liefert eine Task, die entweder normal beendet wird oder über einen Timeout.
+        /// Das Time-Out darf maximal 49 Tage sein und muss grösser als 0 ms sein.
         /// </summary>
         public static Task TimeoutAfter(this Task task, TimeSpan timeout)
         {
@@ -19,24 +20,29 @@ namespace Mbc.AsyncUtils
 
         /// <summary>
         /// Liefert eine Task, die entweder normal beendet wird oder über einen Timeout oder über ein cancelatinToken
+        /// Das Time-Out darf maximal 49 Tage sein und muss grösser als 0 ms sein.
         /// </summary>
         public static Task TimeoutAfter(this Task task, TimeSpan timeout, CancellationToken cancellationToken)
         {
             // Implementation from https://blogs.msdn.microsoft.com/pfxteam/2011/11/10/crafting-a-task-timeoutafter-method/
+            //
+            // Short-circuit #1: Check valid timeouts (we must be in range of the Timer)
+            if (timeout > TimeSpan.FromDays(49))
+            {
+                throw new ArgumentOutOfRangeException("Time-out interval must be less than 49 days.");
+            }
 
-            // Short-circuit #1: infinite timeout or task already completed
-            if (task == null || task.IsCompleted || (timeout == TimeSpan.MaxValue))
+            if (timeout <= TimeSpan.FromMilliseconds(0))
+            {
+                throw new ArgumentOutOfRangeException("Time-out interval must be more than 0 milliseconds.");
+            }
+
+            // Short-circuit #2: task already completed
+            if (task == null || task.IsCompleted)
             {
                 // Either the task has already completed or timeout will never occur.
                 // No proxy necessary.
                 return task;
-            }
-
-            // Short-circuit #2: zero timeout
-            if (timeout == TimeSpan.Zero)
-            {
-                // We've already timed out.
-                return Task.FromException(new TimeoutException());
             }
 
             // tcs.Task will be returned as a proxy to the caller

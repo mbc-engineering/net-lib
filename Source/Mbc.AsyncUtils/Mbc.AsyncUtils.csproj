@@ -8,7 +8,7 @@
   <PropertyGroup>
     <!-- common nuget configuration see common.props-->
     <TargetFramework>net471</TargetFramework>
-    <VersionPrefix>0.2.3</VersionPrefix>
+    <VersionPrefix>0.2.4</VersionPrefix>
     <VersionSuffix></VersionSuffix>
 
     <Product>Mbc.AsyncUtils</Product>
