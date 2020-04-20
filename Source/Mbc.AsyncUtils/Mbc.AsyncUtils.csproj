@@ -4,7 +4,6 @@
     <!-- for correctly loading in VS15 set targetFramework bevore import common.props -->
     <TargetFramework>net471</TargetFramework>
   </PropertyGroup>
-  <Import Project="$(SolutionDir)Build\common.props" />
   <PropertyGroup>
     <!-- common nuget configuration see common.props-->
     <TargetFramework>net471</TargetFramework>

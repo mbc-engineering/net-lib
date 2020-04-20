@@ -1,10 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="$(SolutionDir)Build\common.props" />
   <PropertyGroup>
     <!-- common nuget configuration see common.props-->
-    <VersionPrefix>0.3.3</VersionPrefix>
-    <VersionSuffix></VersionSuffix>
+    <Version>0.3.3</Version>
     
     <Product>Mbc.Common</Product>
     

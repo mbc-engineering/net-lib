@@ -1,10 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="$(SolutionDir)Build\common.props" />
   <PropertyGroup>
     <!-- common nuget configuration see common.props-->
-    <VersionPrefix>0.5.4</VersionPrefix>
-    <VersionSuffix></VersionSuffix>
+    <Version>0.5.4</Version>
 
     <Product>Mbc.Hdf5Utils</Product>
 

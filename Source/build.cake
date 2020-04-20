@@ -68,7 +68,7 @@ Task("NugetPublish")
     };
 
     // Collect all nuget files
-    var nugetPackages = GetFiles($"./**/bin/{configuration}/**/*.symbols.nupkg");
+    var nugetPackages = GetFiles($"./**/bin/{configuration}/**/*.nupkg");
 
     foreach (var package in nugetPackages)
     {

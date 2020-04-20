@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{387B3B40
 	ProjectSection(SolutionItems) = preProject
 		build.cake = build.cake
 		build.ps1 = build.ps1
-		Build\common.props = Build\common.props
+		Directory.Build.props = Directory.Build.props
 		Build\Mbc.CodeAnalysis.ruleset = Build\Mbc.CodeAnalysis.ruleset
 		Build\stylecop.json = Build\stylecop.json
 	EndProjectSection
@@ -32,9 +32,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mbc.AsyncUtils", "Mbc.Async
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mbc.AsyncUtils.Test", "Mbc.AsyncUtils.Test\Mbc.AsyncUtils.Test.csproj", "{B259E018-D86B-4DF1-9C35-24CD6D80F034}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mbc.TclInterpreter", "Mbc.TclInterpreter\Mbc.TclInterpreter.csproj", "{4521BA21-20E4-42EF-B6B3-B48946527538}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mbc.TclInterpreter", "Mbc.TclInterpreter\Mbc.TclInterpreter.csproj", "{4521BA21-20E4-42EF-B6B3-B48946527538}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mbc.TclInterpreter.Test", "Mbc.TclInterpreter.Test\Mbc.TclInterpreter.Test.csproj", "{B1886B50-8F89-4EF3-ADBD-987BC0810EB3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mbc.TclInterpreter.Test", "Mbc.TclInterpreter.Test\Mbc.TclInterpreter.Test.csproj", "{B1886B50-8F89-4EF3-ADBD-987BC0810EB3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

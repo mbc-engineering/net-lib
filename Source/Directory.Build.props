@@ -11,8 +11,6 @@
     <LangVersion>latest</LangVersion>
     <AutoGenerateBindingRedirects>True</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
-    <DebugType>embedded</DebugType>
-    <DebugSymbols>true</DebugSymbols>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -29,11 +27,15 @@
     <Authors>mbc engineering GmbH</Authors>
   
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <RepositoryUrl>http://gitlab.mbc-engineering.ch/mbc/net-lib.git</RepositoryUrl>
-    <PackageProjectUrl>http://gitlab.mbc-engineering.ch/mbc/net-lib</PackageProjectUrl>
+    <!-- Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <!-- Build symbol package (.snupkg) to distribute the PDB containing Source Link -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <IncludeSource>true</IncludeSource>
+    <EmbedAllSources>true</EmbedAllSources>
         
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>    
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Description>
 Copyright mbc engineering GmbH
@@ -51,6 +53,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
     </Description>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Sourcelink for devops-->
+    <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" Version="1.0.0" PrivateAssets="All"/>
+  </ItemGroup>
 
   <!-- Enable Roslyn analyzers 
        ####################### -->
