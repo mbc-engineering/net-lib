@@ -4,6 +4,7 @@
     <!-- common nuget configuration see common.props-->
     <Version>0.5.4</Version>
 
+    <TargetFramework>net471</TargetFramework>
     <Product>Mbc.Hdf5Utils</Product>
 
     <!-- Set compile option for using unsave keywords -->

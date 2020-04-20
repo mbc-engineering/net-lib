@@ -5,7 +5,6 @@
   <!-- Build configuration Settings 
        ############################ -->
   <PropertyGroup>
-    <TargetFramework>net471</TargetFramework>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
     <LangVersion>latest</LangVersion>

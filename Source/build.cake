@@ -29,6 +29,7 @@ Task("Build")
                 .WithRestore()           
                 .SetVerbosity(Verbosity.Minimal)                
                 .UseToolVersion(MSBuildToolVersion.VS2019)
+                .SetMSBuildPlatform(MSBuildPlatform.Automatic)
                 .SetPlatformTarget(PlatformTarget.MSIL));   // MSIL = AnyCPU    
     }    
 });

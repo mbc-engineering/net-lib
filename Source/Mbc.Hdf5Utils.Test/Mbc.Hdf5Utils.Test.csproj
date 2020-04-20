@@ -4,6 +4,7 @@
     <!-- common nuget configuration see common.props-->    
     <Product>Mbc.Hdf5Utils.Test</Product>
 
+    <TargetFramework>net471</TargetFramework>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     
   </PropertyGroup>

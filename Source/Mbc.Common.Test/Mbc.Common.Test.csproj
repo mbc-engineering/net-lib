@@ -3,6 +3,7 @@
   <PropertyGroup>
     <!-- common nuget configuration see common.props-->
 
+    <TargetFramework>net471</TargetFramework>
     <Product>Mbc.Common.Test</Product>
 
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
