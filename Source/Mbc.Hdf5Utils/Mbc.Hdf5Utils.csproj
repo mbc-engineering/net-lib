@@ -4,7 +4,7 @@
     <!-- common nuget configuration see common.props-->
     <Version>0.5.4</Version>
 
-    <TargetFramework>net471</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net471</TargetFrameworks>
     <Product>Mbc.Hdf5Utils</Product>
 
     <!-- Set compile option for using unsave keywords -->
@@ -13,6 +13,7 @@
 
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="HDF.PInvoke" Version="1.10.5.2" />
+    <PackageReference Include="HDF.PInvoke" Version="1.10.6.1" Condition="'$(TargetFramework)' == 'net471' OR '$(TargetFramework)' == 'net48'" />
+    <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.610" Condition="'$(TargetFramework)' == 'netstandard2.0' "/>
   </ItemGroup>
 </Project>
