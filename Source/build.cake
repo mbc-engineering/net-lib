@@ -76,15 +76,14 @@ Task("NugetPublish")
     };
 
     // Collect all nuget files
-    var nugetPackages = GetFiles($"./**/bin/{configuration}/**/*.snupkg");
+    // !!! NuGet will publish both packages to nuget.org. MyPackage.nupkg will be published first, followed by MyPackage.snupkg.
+    var nugetPackages = GetFiles($"./**/bin/{configuration}/**/*.nupkg");
 
     foreach (var package in nugetPackages)
     {
         // Push the package
         try
         {
-            // ToDo: check for already published!
-
             NuGetPush(package, serverConfiguration);
         }
         catch (CakeException cex)
