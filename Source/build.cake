@@ -7,18 +7,29 @@
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var testreportfolder = Argument("testreportfolder", "testresult").TrimEnd('/');
+var testresultsfile =  Argument("testresultsfile", "testresults.trx");
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // TASKS
 ///////////////////////////////////////////////////////////////////////////////
-Task("Build")
+Task("Clean")
   .Does(() =>
 {
+    DotNetCoreClean("net-lib.sln", new DotNetCoreCleanSettings()
+    {
+        Configuration = configuration,
+    });
+    
     Information($"Clean Output Folders");
     var directoriesToClean = GetDirectories("./**/bin");
     CleanDirectories(directoriesToClean);
+});
 
+Task("Build")
+    .IsDependentOn("Clean")
+    .Does(() =>
+{
     var solutions  = GetFiles("./**/*.sln");
     foreach (var solution in solutions)
     {
@@ -35,29 +46,25 @@ Task("Build")
 });
 
 Task("Test")
-    .IsDependentOn("Build")
+    .IsDependentOn("Clean")
     .Does(() =>
 {    
-    var testAssemblies = GetFiles($"./**/bin/{configuration}/**/*.test.dll");    
-    var xunitSettings = new XUnit2Settings {
-        Parallelism = ParallelismOption.None,
-        UseX86 = false,
-        HtmlReport = true,
-        NoAppDomain = true,                        
-        XmlReport = true,
-        OutputDirectory = $"./{testreportfolder}",
-    };     
-    
-    // Run Tests in x64 Process
-    XUnit2(testAssemblies, xunitSettings); 
+    var settings = new DotNetCoreTestSettings
+     {
+         Configuration = configuration,
+         Logger = $"trx;LogFileName=\"{testresultsfile}\"",  // by default results in ..\TestResults\testresults.trx
+     };
 
-    // Run Tests in x86 Process
-    //xunitSettings.UseX86 = true;
-    //xunitSettings.OutputDirectory += "x86";
-    //XUnit2(testAssemblies, xunitSettings); 
+     var projectFiles = GetFiles("./**/*.Test.csproj");
+
+     foreach(var file in projectFiles)
+     {
+         DotNetCoreTest(file.FullPath, settings);
+     }
 });
 
 Task("NugetPublish")
+    .IsDependentOn("Build")
     .IsDependentOn("Test")
     .Does(() =>
 {    
@@ -69,7 +76,7 @@ Task("NugetPublish")
     };
 
     // Collect all nuget files
-    var nugetPackages = GetFiles($"./**/bin/{configuration}/**/*.nupkg");
+    var nugetPackages = GetFiles($"./**/bin/{configuration}/**/*.snupkg");
 
     foreach (var package in nugetPackages)
     {

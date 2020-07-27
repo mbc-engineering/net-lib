@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="Nativ\bin32\tcl86t.dll" PackagePath="build\Nativ\bin32" Visble="false" />
     <Content Include="Nativ\bin64\tcl86t.dll" PackagePath="build\Nativ\bin64" Visble="false" />
-    <Content Include="Mbc.TclInterpreter.targets" PackagePath="build" />
+    <None Include="Mbc.TclInterpreter.targets" Pack="true" PackagePath="build" />
   </ItemGroup>
 </Project>

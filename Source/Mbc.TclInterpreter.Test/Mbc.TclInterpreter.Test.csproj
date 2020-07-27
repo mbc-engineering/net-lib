@@ -23,6 +23,6 @@
     <ProjectReference Include="..\Mbc.TclInterpreter\Mbc.TclInterpreter.csproj" />
   </ItemGroup>
 
-  <Import Project="$(SolutionDir)\Mbc.TclInterpreter\Mbc.TclInterpreter.targets" />
+  <Import Project="..\Mbc.TclInterpreter\Mbc.TclInterpreter.targets" />
 
 </Project>
