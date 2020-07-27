@@ -43,8 +43,8 @@ Task("Test")
         Parallelism = ParallelismOption.None,
         UseX86 = false,
         HtmlReport = true,
-        JUnitReport = true,
         NoAppDomain = true,                        
+        XmlReport = true,
         OutputDirectory = $"./{testreportfolder}",
     };     
     
@@ -91,6 +91,6 @@ Task("NugetPublish")
 
 
 Task("Default")
-  .IsDependentOn("Build");
+  .IsDependentOn("NugetPublish");
 
 RunTarget(target);
