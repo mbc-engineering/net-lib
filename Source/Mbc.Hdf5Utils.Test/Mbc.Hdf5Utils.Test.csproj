@@ -10,7 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="HDF.PInvoke" Version="1.10.6.1" Condition="'$(TargetFramework)' == 'net471'" />
-    <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.610" Condition="'$(TargetFramework)' == 'netcoreapp3.1' "/>
+    <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.610" Condition="'$(TargetFramework)' == 'netcoreapp3.1' " />
     <PackageReference Include="FluentAssertions">
       <Version>5.9.0</Version>
     </PackageReference>    
@@ -24,7 +24,7 @@
       <Version>2.4.1</Version>
     </PackageReference>
     <PackageReference Include="xunit.runner.visualstudio">
-      <Version>2.4.1</Version>
+      <Version>2.4.2</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
