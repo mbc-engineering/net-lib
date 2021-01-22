@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <!-- common nuget configuration see common.props-->
-    <Version>0.2.2</Version>
+    <Version>0.3.0</Version>
 
     <TargetFrameworks>netstandard2.0;net471</TargetFrameworks>
     <Product>Mbc.Common.Interface</Product>

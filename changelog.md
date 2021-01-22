@@ -14,4 +14,4 @@ The following types of changes exist:
 
 ## 22.01.2021
 ### Added
-- Library moves to github
+- repo moves to github with increased versions of the packages
