@@ -35,7 +35,7 @@ For Deployment there is a Cake Build script.
 ..\Source>  .\build.ps1 -t Test
 
 # Publish nuget
-..\Source>  .\build.ps1 -t NugetPublish
+..\Source>  .\build.ps1 --target=NugetPublish --apikey=[xxxxxxxx]
 ```
 
 

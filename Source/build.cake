@@ -7,7 +7,8 @@
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 var testreportfolder = Argument("testreportfolder", "testresult").TrimEnd('/');
-var testresultsfile =  Argument("testresultsfile", "testresults.trx");
+var testresultsfile = Argument("testresultsfile", "testresults.trx");
+var nugetapikey =  Argument("apikey", "apikeymissing");
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,7 +50,7 @@ Task("Test")
     .IsDependentOn("Clean")
     .Does(() =>
 {    
-    var settings = new DotNetCoreTestSettings
+     var settings = new DotNetCoreTestSettings
      {
          Configuration = configuration,
          Logger = $"trx;LogFileName=\"{testresultsfile}\"",  // by default results in ..\TestResults\testresults.trx
@@ -68,11 +69,14 @@ Task("NugetPublish")
     .IsDependentOn("Test")
     .Does(() =>
 {    
-    string source = "mbcpublic";    // Is defined in nuget.config!
+    string source = "nuget.org";    // Is defined in nuget.config!
+
+    Information($"publish nuget to {source} with api key {nugetapikey}");
+
     var serverConfiguration = new NuGetPushSettings() 
     {
         Source = source,
-        ApiKey = "VSTS"
+        ApiKey = nugetapikey,
     };
 
     // Collect all nuget files
