@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
+using Range = Mbc.Common.Collection.Range;
 
 namespace Mbc.Common.Test.Collection
 {

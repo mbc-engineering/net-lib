@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 namespace Mbc.Common.Collection
 {
-    #pragma warning disable SA1618 
     public static class Range
     {
         /// <summary>

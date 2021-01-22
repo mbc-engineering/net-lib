@@ -1,9 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- common nuget configuration see common.props-->
-
-    <TargetFramework>net471</TargetFramework>
+    <TargetFrameworks>net471;net5.0</TargetFrameworks>
     <Product>Mbc.Common.Test</Product>
 
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -14,11 +12,12 @@
       <Version>4.9.4</Version>
     </PackageReference>
     <PackageReference Include="FakeItEasy">
-      <Version>6.2.0</Version>
+      <Version>6.2.1</Version>
     </PackageReference>
     <PackageReference Include="FluentAssertions">
-      <Version>5.9.0</Version>
+      <Version>5.10.3</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
     <PackageReference Include="Xbehave">
       <Version>2.4.1</Version>
     </PackageReference>
@@ -29,7 +28,7 @@
       <Version>2.4.1</Version>
     </PackageReference>
     <PackageReference Include="xunit.runner.visualstudio">
-      <Version>2.4.2</Version>
+      <Version>2.4.3</Version>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

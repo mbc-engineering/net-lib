@@ -12,7 +12,6 @@ The following types of changes exist:
 - **Fixed** for any bug fixes.
 - **Security** in case of vulnerabilities.
 
-## [0.1.0] - 29.10.2018
-## 30.10.2018
+## 22.01.2021
 ### Added
-- Start creating Library
+- Library moves to github

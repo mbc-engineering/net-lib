@@ -55,7 +55,7 @@ Task("Test")
          Logger = $"trx;LogFileName=\"{testresultsfile}\"",  // by default results in ..\TestResults\testresults.trx
      };
 
-     var projectFiles = GetFiles("./**/*.Test.csproj");
+     var projectFiles = GetFiles("./**/*.sln");
 
      foreach(var file in projectFiles)
      {
