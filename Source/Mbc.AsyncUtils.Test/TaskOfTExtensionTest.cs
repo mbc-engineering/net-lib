@@ -71,7 +71,7 @@ namespace Mbc.AsyncUtils.Test
             Func<Task<object>> func = async () => await task.TimeoutAfter(TimeSpan.FromSeconds(1));
 
             // Assert
-            func.Should().Throw<TimeoutException>();
+            func.Should().ThrowAsync<TimeoutException>();
         }
 
         [Fact]

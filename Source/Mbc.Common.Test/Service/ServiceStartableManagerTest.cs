@@ -9,7 +9,7 @@ namespace Mbc.Common.Test.Service
 {
     public class ServiceStartableManagerTest
     {
-        [Fact(Skip = "geht nicht")]
+        [Fact]
         public void ServiceMustBeSingleton()
         {
             // Arrange

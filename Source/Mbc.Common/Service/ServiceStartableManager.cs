@@ -75,7 +75,13 @@ namespace Mbc.Common.Service
                 }
 
                 // Execute Start
-                var comp = _componentContext.ResolveComponent(registriaton, Enumerable.Empty<Parameter>());
+                if (registriaton.Services.Count() != 1)
+                {
+                    System.Diagnostics.Debug.WriteLine(registriaton.Services.Count());
+                }
+
+                var comp = _componentContext.ResolveService(registriaton.Services.First(), Enumerable.Empty<Parameter>());
+                // var comp = _componentContext.ResolveComponent(new ResolveRequest( .ResolveComponent(registriaton, Enumerable.Empty<Parameter>());
                 if (comp is IServiceStartable serviceStartable)
                 {
                     serviceStartable.Start();
